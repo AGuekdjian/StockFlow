@@ -57,6 +57,21 @@ El seed crea `admin@example.com`, `tecnico@example.com`, una categoría, una ubi
 
 ## Docker y uso en LAN
 
+### Preparar una PC nueva
+
+Copiar o clonar el repositorio en la PC definitiva y ejecutar una vez:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\install.ps1
+```
+
+El instalador solicita elevación, habilita WSL 2 y Virtual Machine Platform, instala Docker
+Desktop, MongoDB Database Tools y Git, crea `.env` solicitando la URI de Atlas sin mostrarla,
+genera un secreto de sesión, propone la IP LAN y abre el puerto 8080 sólo para redes privadas.
+Si Windows requiere reinicio, reiniciar y luego ejecutar `start.ps1`. Para reemplazar una
+configuración existente use `-Reconfigure`; para reiniciar automáticamente cuando sea necesario,
+use `-RestartNow`.
+
 Arranque validado (comprueba WSL, Docker/Compose, `.env`, MongoDB Tools y health):
 
 ```powershell
