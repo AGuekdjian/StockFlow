@@ -23,6 +23,7 @@ const replica = await MongoMemoryReplSet.create({
 });
 await mongoose.connect(replica.getUri());
 await seedDatabase({
+  adminEmail: 'admin@example.com',
   adminPassword: 'Admin-password-123!',
   technicianPassword: 'Tech-password-123!',
 });

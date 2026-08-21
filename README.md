@@ -49,11 +49,12 @@ Vite escucha en `0.0.0.0:5173` y Express en `0.0.0.0:3000`. El seed nunca corre 
 ```powershell
 $env:MONGODB_URI='mongodb+srv://...'
 $env:SEED_ADMIN_PASSWORD='una-clave-larga'
-$env:SEED_TECHNICIAN_PASSWORD='otra-clave-larga'
 npm.cmd run seed -w backend
 ```
 
-El seed crea `admin@example.com`, `tecnico@example.com`, una categoría, una ubicación y un producto. Cambiar las contraseñas antes de cualquier uso compartido y no usar el seed contra producción.
+El seed crea el administrador `info@mialarma.com.uy`, una categoría, una ubicación y un
+producto. Los técnicos se crean desde la pantalla Usuarios. La contraseña puede cambiarse desde
+esa misma pantalla por un administrador y el cambio cierra las sesiones activas del usuario.
 
 ## Docker y uso en LAN
 

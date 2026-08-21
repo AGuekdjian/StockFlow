@@ -11,6 +11,7 @@ import { Alert } from '../components/ui/Alert.jsx';
 import { useAuth } from '../features/auth/AuthContext.jsx';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog.jsx';
 import { Pagination } from '../components/ui/Pagination.jsx';
+import { Modal } from '../components/ui/Modal.jsx';
 const PAGE_SIZE = 20;
 export function UsersPage() {
   const { user: current } = useAuth();
@@ -18,6 +19,9 @@ export function UsersPage() {
   const [show, setShow] = useState(false);
   const [error, setError] = useState();
   const [pendingStatus, setPendingStatus] = useState();
+  const [pendingPassword, setPendingPassword] = useState();
+  const [passwordForm, setPasswordForm] = useState({ password: '', confirmation: '' });
+  const [passwordError, setPasswordError] = useState();
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'TECHNICIAN' });
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -48,6 +52,29 @@ export function UsersPage() {
     });
     setPendingStatus(null);
     load();
+  }
+  async function resetPassword() {
+    setPasswordError();
+    if (passwordForm.password !== passwordForm.confirmation) {
+      setPasswordError('Las contraseñas no coinciden.');
+      return;
+    }
+    try {
+      const result = await api(`/users/${pendingPassword._id}/password`, {
+        method: 'PATCH',
+        body: json({ password: passwordForm.password }),
+      });
+      setPendingPassword(null);
+      setPasswordForm({ password: '', confirmation: '' });
+      if (result.requiresLogin) window.location.assign('/login');
+    } catch (reason) {
+      setPasswordError(reason.message);
+    }
+  }
+  function closePasswordModal() {
+    setPendingPassword(null);
+    setPasswordError();
+    setPasswordForm({ password: '', confirmation: '' });
   }
   return (
     <>
@@ -82,7 +109,7 @@ export function UsersPage() {
             <Input
               label="Contraseña temporal"
               type="password"
-              minLength="12"
+              minLength="10"
               required
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
@@ -113,11 +140,16 @@ export function UsersPage() {
               </Badge>
             </td>
             <td className="px-4 py-3">
-              {current.id !== String(item._id) && (
-                <Button variant="quiet" onClick={() => setPendingStatus(item)}>
-                  {item.active ? 'Desactivar' : 'Reactivar'}
+              <div className="flex flex-wrap gap-1">
+                <Button variant="quiet" onClick={() => setPendingPassword(item)}>
+                  Cambiar contraseña
                 </Button>
-              )}
+                {current.id !== String(item._id) && (
+                  <Button variant="quiet" onClick={() => setPendingStatus(item)}>
+                    {item.active ? 'Desactivar' : 'Reactivar'}
+                  </Button>
+                )}
+              </div>
             </td>
           </tr>
         ))}
@@ -144,6 +176,53 @@ export function UsersPage() {
         onConfirm={confirmStatus}
         onCancel={() => setPendingStatus(null)}
       />
+      <Modal
+        open={Boolean(pendingPassword)}
+        title={`Cambiar contraseña${pendingPassword ? ` de ${pendingPassword.name}` : ''}`}
+        onClose={closePasswordModal}
+        actions={
+          <>
+            <Button variant="secondary" onClick={closePasswordModal}>
+              Cancelar
+            </Button>
+            <Button
+              disabled={passwordForm.password.length < 10 || !passwordForm.confirmation}
+              onClick={resetPassword}
+            >
+              Guardar contraseña
+            </Button>
+          </>
+        }
+      >
+        {passwordError && (
+          <div className="mb-4">
+            <Alert>{passwordError}</Alert>
+          </div>
+        )}
+        <div className="grid gap-4">
+          <Input
+            label="Nueva contraseña"
+            type="password"
+            minLength="10"
+            autoComplete="new-password"
+            value={passwordForm.password}
+            onChange={(event) => setPasswordForm({ ...passwordForm, password: event.target.value })}
+          />
+          <Input
+            label="Confirmar contraseña"
+            type="password"
+            minLength="10"
+            autoComplete="new-password"
+            value={passwordForm.confirmation}
+            onChange={(event) =>
+              setPasswordForm({ ...passwordForm, confirmation: event.target.value })
+            }
+          />
+          <p className="text-xs text-slate-500">
+            El cambio cerrará las sesiones activas de este usuario y quedará auditado.
+          </p>
+        </div>
+      </Modal>
     </>
   );
 }

@@ -4,11 +4,13 @@ import { Category } from '../categories/category.model.js';
 import { Location } from '../locations/location.model.js';
 import { Product } from '../products/product.model.js';
 
-export async function seedDatabase({ adminPassword, technicianPassword }) {
-  const [adminHash, technicianHash] = await Promise.all([
-    argon2.hash(adminPassword),
-    argon2.hash(technicianPassword),
-  ]);
+export async function seedDatabase({
+  adminPassword,
+  adminEmail = 'info@mialarma.com.uy',
+  technicianPassword,
+  technicianEmail = 'tecnico@example.com',
+}) {
+  const adminHash = await argon2.hash(adminPassword);
   const [category, location] = await Promise.all([
     Category.findOneAndUpdate(
       { code: 'CAM' },
@@ -21,18 +23,19 @@ export async function seedDatabase({ adminPassword, technicianPassword }) {
       { upsert: true, new: true },
     ),
   ]);
-  await Promise.all([
-    User.findOneAndUpdate(
-      { email: 'admin@example.com' },
-      { $set: { name: 'Administrador', passwordHash: adminHash, role: 'ADMIN', active: true } },
-      { upsert: true },
-    ),
-    User.findOneAndUpdate(
-      { email: 'tecnico@example.com' },
+  await User.findOneAndUpdate(
+    { email: adminEmail },
+    { $set: { name: 'Administrador', passwordHash: adminHash, role: 'ADMIN', active: true } },
+    { upsert: true },
+  );
+  if (technicianPassword) {
+    const technicianHash = await argon2.hash(technicianPassword);
+    await User.findOneAndUpdate(
+      { email: technicianEmail },
       { $set: { name: 'Técnico', passwordHash: technicianHash, role: 'TECHNICIAN', active: true } },
       { upsert: true },
-    ),
-  ]);
+    );
+  }
   await Product.findOneAndUpdate(
     { internalCode: 'CAM-000001' },
     {
