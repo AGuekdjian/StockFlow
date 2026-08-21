@@ -3,11 +3,20 @@ param(
   [Parameter(Mandatory = $true)][string]$BackupPath
 )
 $ErrorActionPreference = 'Stop'
+$mongoDumpCommand = Get-Command mongodump -ErrorAction SilentlyContinue
+$mongoDumpExecutable = if ($mongoDumpCommand) {
+  $mongoDumpCommand.Source
+} else {
+  Join-Path $env:ProgramFiles 'MongoDB\Tools\100\bin\mongodump.exe'
+}
+if (-not (Test-Path -LiteralPath $mongoDumpExecutable -PathType Leaf)) {
+  throw 'mongodump no está instalado o no pudo localizarse.'
+}
 $resolvedRoot = [System.IO.Path]::GetFullPath($BackupPath)
 New-Item -ItemType Directory -Force -Path $resolvedRoot | Out-Null
 $stamp = Get-Date -Format 'yyyy-MM-dd_HHmmss'
 $dailyPath = Join-Path $resolvedRoot "daily_$stamp.archive.gz"
-& mongodump --uri=$MongoUri --archive=$dailyPath --gzip
+& $mongoDumpExecutable --uri=$MongoUri --archive=$dailyPath --gzip
 if ($LASTEXITCODE -ne 0) { throw 'mongodump falló; no se modificó la retención.' }
 Get-ChildItem -LiteralPath $resolvedRoot -Filter 'daily_*.archive.gz' -File | Sort-Object LastWriteTime -Descending | Select-Object -Skip 7 | Remove-Item -Force
 if ((Get-Date).DayOfWeek -eq 'Sunday') {
