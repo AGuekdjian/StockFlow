@@ -57,6 +57,25 @@ El seed crea `admin@example.com`, `tecnico@example.com`, una categoría, una ubi
 
 ## Docker y uso en LAN
 
+Arranque validado (comprueba WSL, Docker/Compose, `.env`, MongoDB Tools y health):
+
+```powershell
+.\scripts\start.ps1
+```
+
+Use `-NoBuild` para reutilizar las imágenes existentes. Para detener y eliminar contenedores,
+red e imágenes locales conservando SQLite, logs y backups:
+
+```powershell
+.\scripts\stop.ps1
+```
+
+El borrado de volúmenes es deliberadamente explícito y no elimina los backups del host:
+
+```powershell
+.\scripts\stop.ps1 -PurgeData
+```
+
 ```powershell
 docker compose config
 docker compose up --build -d
