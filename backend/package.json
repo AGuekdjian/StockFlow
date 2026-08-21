@@ -1,0 +1,36 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "start:e2e": "node scripts/e2e-server.js",
+    "seed": "node scripts/seed.js",
+    "lint": "eslint src tests",
+    "test": "vitest run --exclude tests/integration/**",
+    "test:coverage": "vitest run --coverage --exclude tests/integration/**",
+    "test:integration": "vitest run tests/integration --passWithNoTests",
+    "build": "node scripts/check-build.js"
+  },
+  "dependencies": {
+    "argon2": "^0.45.1",
+    "better-sqlite3": "^12.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1",
+    "express-session": "^1.19.0",
+    "helmet": "^8.1.0",
+    "mongoose": "^8.18.0",
+    "pino": "^9.9.0",
+    "rotating-file-stream": "^3.2.6",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^11.2.0",
+    "supertest": "^7.1.4",
+    "vitest": "^3.2.4"
+  }
+}
