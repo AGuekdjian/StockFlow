@@ -8,11 +8,20 @@ import { AuthService } from '../src/modules/auth/auth.service.js';
 const sqlite = openSqlite(':memory:');
 const logger = { info() {}, warn() {}, error() {} };
 const password = 'correct-password';
+const adminId = 'aaaaaaaaaaaaaaaaaaaaaaaa';
+const techId = 'bbbbbbbbbbbbbbbbbbbbbbbb';
 let passwordHash;
+let updatedPasswordHash;
 const records = [
-  { _id: 'admin-id', name: 'Admin', email: 'admin@example.com', role: 'ADMIN', active: true },
-  { _id: 'tech-id', name: 'Tech', email: 'tech@example.com', role: 'TECHNICIAN', active: true },
-  { _id: 'off-id', name: 'Off', email: 'off@example.com', role: 'TECHNICIAN', active: false },
+  { _id: adminId, name: 'Admin', email: 'admin@example.com', role: 'ADMIN', active: true },
+  { _id: techId, name: 'Tech', email: 'tech@example.com', role: 'TECHNICIAN', active: true },
+  {
+    _id: 'cccccccccccccccccccccccc',
+    name: 'Off',
+    email: 'off@example.com',
+    role: 'TECHNICIAN',
+    active: false,
+  },
 ];
 const users = {
   async findByEmailWithPassword(email) {
@@ -27,6 +36,10 @@ const users = {
   },
   async setActive() {
     return null;
+  },
+  async setPassword(id, value) {
+    updatedPasswordHash = value;
+    return records.find((item) => item._id === id) ?? null;
   },
 };
 let app;
@@ -74,6 +87,23 @@ describe('authentication and authorization', () => {
     await tech.post('/api/auth/login').send({ email: 'tech@example.com', password });
     const response = await tech.get('/api/users').expect(403);
     expect(response.body.error.code).toBe('FORBIDDEN');
+  });
+  it('allows only ADMIN to reset a password without exposing its hash', async () => {
+    const admin = request.agent(app);
+    await admin.post('/api/auth/login').send({ email: 'admin@example.com', password });
+    const response = await admin
+      .patch(`/api/users/${techId}/password`)
+      .send({ password: 'new-password-123' })
+      .expect(200);
+    expect(response.body.data.user).not.toHaveProperty('passwordHash');
+    expect(await argon2.verify(updatedPasswordHash, 'new-password-123')).toBe(true);
+
+    const tech = request.agent(app);
+    await tech.post('/api/auth/login').send({ email: 'tech@example.com', password });
+    await tech
+      .patch(`/api/users/${adminId}/password`)
+      .send({ password: 'another-password-123' })
+      .expect(403);
   });
   it('does not expose any physical DELETE endpoint for movements', async () => {
     const response = await request(app)

@@ -27,4 +27,11 @@ export class UserRepository {
       { new: true, runValidators: true },
     ).lean();
   }
+  setPassword(id, passwordHash) {
+    return User.findByIdAndUpdate(
+      id,
+      { $set: { passwordHash } },
+      { new: true, runValidators: true },
+    ).lean();
+  }
 }

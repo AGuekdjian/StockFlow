@@ -46,6 +46,14 @@ test('admin registers an entry and sees the append-only movement', async ({ page
   await updatedRow.getByRole('button', { name: 'Desactivar' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Desactivar' }).click();
   await expect(page.getByRole('row').filter({ hasText: 'ACC-900001' })).toContainText('Inactivo');
+
+  await page.getByRole('link', { name: 'Usuarios' }).click();
+  const adminRow = page.getByRole('row').filter({ hasText: 'admin@example.com' });
+  await adminRow.getByRole('button', { name: 'Cambiar contraseña' }).click();
+  await page.getByLabel('Nueva contraseña').fill('Admin-password-123!');
+  await page.getByLabel('Confirmar contraseña').fill('Admin-password-123!');
+  await page.getByRole('dialog').getByRole('button', { name: 'Guardar contraseña' }).click();
+  await expect(page.getByRole('heading', { name: 'Iniciar sesión' })).toBeVisible();
 });
 
 test('technician completes the fast OUT flow and cannot access admin pages', async ({ page }) => {

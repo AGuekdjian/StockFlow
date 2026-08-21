@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { requireAuth } from '../../middlewares/auth.middleware.js';
 import { requirePermission } from '../../middlewares/authorization.middleware.js';
 import { validate } from '../../middlewares/validation.middleware.js';
-import { createUserSchema } from '../auth/auth.validation.js';
+import { createUserSchema, resetPasswordSchema } from '../auth/auth.validation.js';
 import { PERMISSIONS } from '../auth/permissions.js';
 import { AppError } from '../../shared/errors/app-error.js';
 
@@ -55,6 +55,38 @@ export function userRouter({ users, authService, sessionStore, audit }) {
       next(error);
     }
   });
+  router.patch(
+    '/:id/password',
+    validate(idParams, 'params'),
+    validate(resetPasswordSchema),
+    async (req, res, next) => {
+      try {
+        const passwordHash = await authService.hashPassword(req.body.password);
+        const user = await users.setPassword(req.params.id, passwordHash);
+        if (!user)
+          throw new AppError({
+            code: 'USER_NOT_FOUND',
+            message: 'Usuario no encontrado.',
+            status: 404,
+          });
+        sessionStore?.destroyUserSessions(req.params.id);
+        await audit?.record({
+          userId: req.user.id,
+          action: 'USER_PASSWORD_RESET',
+          entity: 'User',
+          entityId: user._id,
+          requestId: req.requestId,
+        });
+        const respond = () =>
+          res.json({ data: { user, requiresLogin: req.user.id === req.params.id } });
+        if (req.user.id === req.params.id)
+          return req.session.destroy((error) => (error ? next(error) : respond()));
+        return respond();
+      } catch (error) {
+        next(error);
+      }
+    },
+  );
   router.patch(
     '/:id/status',
     validate(idParams, 'params'),
