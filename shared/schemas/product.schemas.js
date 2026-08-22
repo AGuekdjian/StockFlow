@@ -1,12 +1,18 @@
 import { z } from 'zod';
+import { normalizeScannedCode } from './code-normalization.js';
 
 const objectId = z.string().regex(/^[a-f\d]{24}$/i, 'Identificador inválido');
 const barcode = z
   .string()
   .trim()
-  .min(3)
-  .max(64)
-  .regex(/^[\x21-\x7e]+$/, 'Código de barras inválido');
+  .transform(normalizeScannedCode)
+  .pipe(
+    z
+      .string()
+      .min(3)
+      .max(64)
+      .regex(/^[\x21-\x7e]+$/, 'Código de barras inválido'),
+  );
 
 export const createProductSchema = z
   .object({

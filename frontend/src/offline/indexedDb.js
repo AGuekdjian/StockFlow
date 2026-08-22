@@ -1,3 +1,5 @@
+import { normalizeScannedCode } from '@stock-control/shared/code-normalization';
+
 const DATABASE = 'stock-control';
 const VERSION = 2;
 const STORE = 'pending-requests';
@@ -50,18 +52,19 @@ export const productCache = {
       await transaction('readwrite', (store) => store.put(value), PRODUCTS);
   },
   async findByCode(code) {
+    const normalizedCode = normalizeScannedCode(code);
     const database = await openDatabase();
     return new Promise((resolve, reject) => {
       const tx = database.transaction(PRODUCTS, 'readonly');
       const store = tx.objectStore(PRODUCTS);
-      const internal = store.index('internalCode').get(code.toUpperCase());
+      const internal = store.index('internalCode').get(normalizedCode.toUpperCase());
       internal.onsuccess = () => {
         if (internal.result) {
           database.close();
           resolve(internal.result);
           return;
         }
-        const barcode = store.index('barcodes').get(code);
+        const barcode = store.index('barcodes').get(normalizedCode);
         barcode.onsuccess = () => {
           database.close();
           resolve(barcode.result);

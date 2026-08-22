@@ -8,6 +8,7 @@ import { Select } from '../components/ui/Select.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Alert } from '../components/ui/Alert.jsx';
 import { PageHeader } from '../components/ui/PageHeader.jsx';
+import { normalizeScannedCode } from '@stock-control/shared/code-normalization';
 const reasons = ['Instalación', 'Mantenimiento', 'Service', 'Préstamo', 'Uso interno', 'Otro'];
 const titles = { OUT: 'Registrar salida', IN: 'Registrar entrada', RETURN: 'Registrar devolución' };
 export function MovementPage({ type, embedded = false }) {
@@ -52,10 +53,7 @@ export function MovementPage({ type, embedded = false }) {
         ...(form.jobNumber && { jobNumber: form.jobNumber }),
         ...(form.observation && { observation: form.observation }),
         ...(product.serializable && {
-          serialNumbers: form.serialNumbers
-            .split(',')
-            .map((value) => value.trim())
-            .filter(Boolean),
+          serialNumbers: form.serialNumbers.split(',').map(normalizeScannedCode).filter(Boolean),
         }),
       });
       setMessage({

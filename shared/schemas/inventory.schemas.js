@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { normalizeScannedCode } from './code-normalization.js';
 
 export const MOVEMENT_TYPES = ['IN', 'OUT', 'RETURN', 'ADJUSTMENT_IN', 'ADJUSTMENT_OUT'];
 export const OUT_REASONS = [
@@ -24,7 +25,10 @@ export const stockMovementSchema = z
       .string()
       .regex(/^[a-f\d]{24}$/i)
       .optional(),
-    serialNumbers: z.array(z.string().trim().min(1).max(120)).max(100).optional(),
+    serialNumbers: z
+      .array(z.string().trim().transform(normalizeScannedCode).pipe(z.string().min(1).max(120)))
+      .max(100)
+      .optional(),
     expectedStock: z.number().int().min(0).optional(),
   })
   .strict()
