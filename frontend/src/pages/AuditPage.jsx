@@ -7,7 +7,7 @@ import { Card } from '../components/ui/Card.jsx';
 import { Input } from '../components/ui/Input.jsx';
 import { Button } from '../components/ui/Button.jsx';
 const PAGE_SIZE = 20;
-export function AuditPage() {
+export function AuditPage({ embedded = false }) {
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -26,7 +26,9 @@ export function AuditPage() {
   }, []);
   return (
     <>
-      <PageHeader title="Auditoría" description="Registro inmutable de acciones críticas." />
+      {!embedded && (
+        <PageHeader title="Auditoría" description="Registro inmutable de acciones críticas." />
+      )}
       <Card className="mb-5">
         <form
           className="grid gap-3 sm:grid-cols-3"

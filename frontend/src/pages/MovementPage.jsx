@@ -10,7 +10,7 @@ import { Alert } from '../components/ui/Alert.jsx';
 import { PageHeader } from '../components/ui/PageHeader.jsx';
 const reasons = ['Instalación', 'Mantenimiento', 'Service', 'Préstamo', 'Uso interno', 'Otro'];
 const titles = { OUT: 'Registrar salida', IN: 'Registrar entrada', RETURN: 'Registrar devolución' };
-export function MovementPage({ type }) {
+export function MovementPage({ type, embedded = false }) {
   const [product, setProduct] = useState();
   const [form, setForm] = useState({
     quantity: 1,
@@ -85,10 +85,12 @@ export function MovementPage({ type }) {
   }
   return (
     <>
-      <PageHeader
-        title={titles[type]}
-        description="Escaneá el producto y confirmá los datos del movimiento."
-      />
+      {!embedded && (
+        <PageHeader
+          title={titles[type]}
+          description="Escaneá el producto y confirmá los datos del movimiento."
+        />
+      )}
       {message?.error && <Alert>{message.error}</Alert>}
       {message?.success && <Alert tone="info">{message.success}</Alert>}
       <div className="mt-4 grid gap-5 lg:grid-cols-[1fr_1.2fr]">

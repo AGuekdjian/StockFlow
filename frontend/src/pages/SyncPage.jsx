@@ -16,7 +16,7 @@ const tone = {
   FAILED: 'danger',
   CONFLICT: 'danger',
 };
-export function SyncPage() {
+export function SyncPage({ embedded = false }) {
   const [items, setItems] = useState([]);
   const [pendingConflict, setPendingConflict] = useState();
   const [resolutionReason, setResolutionReason] = useState('');
@@ -55,10 +55,12 @@ export function SyncPage() {
   }
   return (
     <>
-      <PageHeader
-        title="Sincronización"
-        description="Operaciones locales, reintentos y conflictos que requieren decisión explícita."
-      />
+      {!embedded && (
+        <PageHeader
+          title="Sincronización"
+          description="Operaciones locales, reintentos y conflictos que requieren decisión explícita."
+        />
+      )}
       <div className="mb-4 max-w-xs">
         <Select
           label="Estado"

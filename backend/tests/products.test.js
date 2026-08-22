@@ -17,6 +17,9 @@ function fixture(overrides = {}) {
     async create(input) {
       return { _id: 'product-id', stock: 0, active: true, ...input };
     },
+    async nextInternalCode(prefix) {
+      return `${prefix}000002`;
+    },
     async findById() {
       return { _id: 'product-id', ...valid, stock: 0, active: true };
     },
@@ -34,6 +37,10 @@ describe('ProductService', () => {
   it('creates products at stock zero and validates references', async () => {
     const product = await fixture().create(valid, {});
     expect(product.stock).toBe(0);
+  });
+  it('assigns the next atomic sequence when only a prefix is entered', async () => {
+    const product = await fixture().create({ ...valid, internalCode: 'CAM-' }, {});
+    expect(product.internalCode).toBe('CAM-000002');
   });
   it.each([
     ['internalCode', 'DUPLICATE_INTERNAL_CODE'],

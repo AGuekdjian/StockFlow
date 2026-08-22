@@ -17,6 +17,7 @@ import { OutboxRepository } from '../../src/infrastructure/sqlite/outbox.reposit
 import { InventoryService } from '../../src/modules/inventory/inventory.service.js';
 import { StockOperationCoordinator } from '../../src/modules/sync/stock-operation.coordinator.js';
 import { DashboardRepository } from '../../src/modules/inventory/dashboard.repository.js';
+import { ProductRepository } from '../../src/modules/products/product.repository.js';
 
 let replica;
 let repository;
@@ -340,6 +341,22 @@ describe('InventoryRepository transactions', () => {
     ).rejects.toMatchObject({ code: 11000 });
   });
 
+  it('generates consecutive category codes without duplicates under concurrency', async () => {
+    const categoryId = (await Category.findOne())._id;
+    const productRepository = new ProductRepository();
+    const codes = await Promise.all(
+      Array.from({ length: 5 }, () => productRepository.nextInternalCode('CAM-', categoryId)),
+    );
+    expect(new Set(codes).size).toBe(5);
+    expect(codes.sort()).toEqual([
+      'CAM-000002',
+      'CAM-000003',
+      'CAM-000004',
+      'CAM-000005',
+      'CAM-000006',
+    ]);
+  });
+
   it('restricts a technician dashboard to their own recent movements', async () => {
     const [techA, techB] = await User.create([
       {
@@ -387,7 +404,9 @@ describe('InventoryRepository transactions', () => {
       role: 'TECHNICIAN',
     });
     expect(summary.outputsToday).toBe(1);
+    expect(summary.outputsMonth).toBe(1);
     expect(summary.inputsToday).toBeNull();
+    expect(summary.inputsMonth).toBeNull();
     expect(summary.latest).toHaveLength(1);
     expect(String(summary.latest[0].userId._id)).toBe(String(techA._id));
   });

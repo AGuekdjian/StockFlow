@@ -5,14 +5,12 @@ const allLinks = [
   { to: '/', label: 'Resumen' },
   { to: '/salida', label: 'Registrar salida' },
   { to: '/devolucion', label: 'Registrar devolución' },
-  { to: '/entrada', label: 'Registrar entrada', admin: true },
+  { to: '/registro-stock', label: 'Registrar stock', admin: true },
   { to: '/productos', label: 'Productos' },
   { to: '/catalogos', label: 'Categorías y ubicaciones', admin: true },
   { to: '/movimientos', label: 'Movimientos' },
-  { to: '/conteo', label: 'Conteo físico', admin: true },
   { to: '/usuarios', label: 'Usuarios', admin: true },
-  { to: '/auditoria', label: 'Auditoría', admin: true },
-  { to: '/sincronizacion', label: 'Sincronización', admin: true },
+  { to: '/sistema', label: 'Auditoría y sincronización', admin: true },
 ];
 export function AppLayout() {
   const { user, logout } = useAuth();

@@ -13,6 +13,8 @@ export function DashboardPage() {
   const metrics = [
     ['Salidas hoy', data?.outputsToday],
     ['Entradas hoy', data?.inputsToday],
+    ['Salidas del mes', data?.outputsMonth],
+    ['Entradas del mes', data?.inputsMonth],
     ['Stock bajo', data?.lowStock],
     ['Sin stock', data?.outOfStock],
   ];
@@ -22,7 +24,7 @@ export function DashboardPage() {
         title="Resumen operacional"
         description="Estado actual del depósito y la sincronización."
       />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {metrics.map(([label, value]) => (
           <Card key={label}>
             <p className="text-sm text-slate-600">{label}</p>
@@ -34,15 +36,10 @@ export function DashboardPage() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
           ['Nueva salida rápida', '/salida'],
-          ...(user.role === 'ADMIN' ? [['Nueva entrada rápida', '/entrada']] : []),
+          ...(user.role === 'ADMIN' ? [['Registrar stock', '/registro-stock']] : []),
           ['Escanear producto', '/scanner'],
           ['Ver movimientos', '/movimientos'],
-          ...(user.role === 'ADMIN'
-            ? [
-                ['Conteo físico', '/conteo'],
-                ['Revisar sincronización', '/sincronizacion'],
-              ]
-            : []),
+          ...(user.role === 'ADMIN' ? [['Auditoría y sincronización', '/sistema']] : []),
         ].map(([label, href]) => (
           <Link
             key={href}

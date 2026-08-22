@@ -162,9 +162,10 @@ export function ProductsPage() {
               </div>
             )}
             <Input
-              label="Código interno"
+              label="Código interno o prefijo correlativo"
               required
               disabled={Boolean(editingId)}
+              placeholder="Ej.: CAM-"
               value={form.internalCode}
               onChange={(e) => setForm({ ...form, internalCode: e.target.value })}
             />
