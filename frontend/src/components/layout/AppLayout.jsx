@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../../features/auth/AuthContext.jsx';
 import { ConnectivityStatus } from './ConnectivityStatus.jsx';
+import { preloadRoute } from '../../routes/pageLoaders.js';
 const allLinks = [
   { to: '/', label: 'Resumen' },
   { to: '/salida', label: 'Registrar salida' },
@@ -27,6 +28,8 @@ export function AppLayout() {
               key={link.to}
               to={link.to}
               end={link.to === '/'}
+              onMouseEnter={() => preloadRoute(link.to)}
+              onFocus={() => preloadRoute(link.to)}
               className={({ isActive }) =>
                 `block whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium ${isActive ? 'bg-blue-700 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`
               }

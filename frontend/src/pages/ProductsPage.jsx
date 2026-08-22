@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../features/auth/AuthContext.jsx';
 import { api, json } from '../services/api.js';
 import { PageHeader } from '../components/ui/PageHeader.jsx';
@@ -15,6 +15,7 @@ import { Pagination } from '../components/ui/Pagination.jsx';
 import { submitMovement } from '../services/inventory.js';
 import { normalizeScannedCode } from '@stock-control/shared/code-normalization';
 const PAGE_SIZE = 20;
+const PRODUCT_HEADERS = ['Código', 'Producto', 'Stock', 'Mínimo', 'Estado', 'Acción'];
 const emptyForm = {
   internalCode: '',
   physicalStock: 0,
@@ -28,6 +29,49 @@ const emptyForm = {
   serializable: false,
 };
 
+const ProductList = memo(function ProductList({
+  items,
+  isAdmin,
+  page,
+  total,
+  onEdit,
+  onStatus,
+  onPageChange,
+}) {
+  return (
+    <>
+      <Table headers={PRODUCT_HEADERS} empty={!items.length}>
+        {items.map((item) => (
+          <tr key={item._id}>
+            <td className="px-4 py-3 font-mono text-xs">{item.internalCode}</td>
+            <td className="px-4 py-3 font-medium">{item.name}</td>
+            <td className="px-4 py-3 font-bold">{item.stock}</td>
+            <td className="px-4 py-3">{item.minimumStock}</td>
+            <td className="px-4 py-3">
+              <Badge tone={item.active ? 'success' : 'neutral'}>
+                {item.active ? 'Activo' : 'Inactivo'}
+              </Badge>
+            </td>
+            <td className="px-4 py-3">
+              {isAdmin && (
+                <div className="flex gap-1">
+                  <Button variant="quiet" onClick={() => onEdit(item)}>
+                    Editar
+                  </Button>
+                  <Button variant="quiet" onClick={() => onStatus(item)}>
+                    {item.active ? 'Desactivar' : 'Reactivar'}
+                  </Button>
+                </div>
+              )}
+            </td>
+          </tr>
+        ))}
+      </Table>
+      <Pagination page={page} limit={PAGE_SIZE} total={total} onChange={onPageChange} />
+    </>
+  );
+});
+
 export function ProductsPage() {
   const { user } = useAuth();
   const [items, setItems] = useState([]);
@@ -40,15 +84,18 @@ export function ProductsPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState('');
-  const load = (targetPage = page, targetSearch = search) => {
-    const query = new URLSearchParams({ page: String(targetPage), limit: String(PAGE_SIZE) });
-    if (targetSearch.trim()) query.set('search', targetSearch.trim());
-    return api(`/products?${query}`).then((data) => {
-      setItems(data.items);
-      setTotal(data.pagination.total);
-      cacheProducts(data.items);
-    });
-  };
+  const load = useCallback(
+    (targetPage = page, targetSearch = search) => {
+      const query = new URLSearchParams({ page: String(targetPage), limit: String(PAGE_SIZE) });
+      if (targetSearch.trim()) query.set('search', targetSearch.trim());
+      return api(`/products?${query}`).then((data) => {
+        setItems(data.items);
+        setTotal(data.pagination.total);
+        cacheProducts(data.items);
+      });
+    },
+    [page, search],
+  );
   useEffect(() => {
     load(1, '');
     Promise.all([api('/categories'), api('/locations')]).then(([categories, locations]) =>
@@ -89,7 +136,7 @@ export function ProductsPage() {
       setError(reason.message);
     }
   }
-  function edit(item) {
+  const edit = useCallback((item) => {
     setEditingId(item._id);
     setForm({
       internalCode: item.internalCode,
@@ -105,7 +152,14 @@ export function ProductsPage() {
     });
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+  }, []);
+  const changePage = useCallback(
+    (nextPage) => {
+      setPage(nextPage);
+      load(nextPage);
+    },
+    [load],
+  );
   function closeForm() {
     setShowForm(false);
     setEditingId(null);
@@ -265,44 +319,14 @@ export function ProductsPage() {
           </form>
         </Card>
       )}
-      <Table
-        headers={['Código', 'Producto', 'Stock', 'Mínimo', 'Estado', 'Acción']}
-        empty={!items.length}
-      >
-        {items.map((item) => (
-          <tr key={item._id}>
-            <td className="px-4 py-3 font-mono text-xs">{item.internalCode}</td>
-            <td className="px-4 py-3 font-medium">{item.name}</td>
-            <td className="px-4 py-3 font-bold">{item.stock}</td>
-            <td className="px-4 py-3">{item.minimumStock}</td>
-            <td className="px-4 py-3">
-              <Badge tone={item.active ? 'success' : 'neutral'}>
-                {item.active ? 'Activo' : 'Inactivo'}
-              </Badge>
-            </td>
-            <td className="px-4 py-3">
-              {user.role === 'ADMIN' && (
-                <div className="flex gap-1">
-                  <Button variant="quiet" onClick={() => edit(item)}>
-                    Editar
-                  </Button>
-                  <Button variant="quiet" onClick={() => setPendingStatus(item)}>
-                    {item.active ? 'Desactivar' : 'Reactivar'}
-                  </Button>
-                </div>
-              )}
-            </td>
-          </tr>
-        ))}
-      </Table>
-      <Pagination
+      <ProductList
+        items={items}
+        isAdmin={user.role === 'ADMIN'}
         page={page}
-        limit={PAGE_SIZE}
         total={total}
-        onChange={(nextPage) => {
-          setPage(nextPage);
-          load(nextPage);
-        }}
+        onEdit={edit}
+        onStatus={setPendingStatus}
+        onPageChange={changePage}
       />
       <ConfirmDialog
         open={Boolean(pendingStatus)}
