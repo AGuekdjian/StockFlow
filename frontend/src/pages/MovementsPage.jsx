@@ -1,5 +1,5 @@
 import { memo, useEffect, useState } from 'react';
-import { api } from '../services/api.js';
+import { apiLatest, invalidateApi } from '../services/api.js';
 import { PageHeader } from '../components/ui/PageHeader.jsx';
 import { Table } from '../components/ui/Table.jsx';
 import { Badge } from '../components/ui/Badge.jsx';
@@ -61,13 +61,15 @@ export function MovementsPage() {
       limit: String(PAGE_SIZE),
       ...Object.fromEntries(Object.entries(values).filter(([, value]) => value)),
     });
-    return api(`/inventory/movements?${query}`).then((data) => {
+    return apiLatest('movements-list', `/inventory/movements?${query}`).then((data) => {
+      if (!data) return;
       setItems(data.items);
       setTotal(data.pagination.total);
     });
   };
   useEffect(() => {
     load(filters, 1);
+    return () => invalidateApi('movements-list');
     // Initial filters are intentionally stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

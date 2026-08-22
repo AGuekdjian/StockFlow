@@ -1,5 +1,5 @@
 import { memo, useEffect, useState } from 'react';
-import { api, json } from '../services/api.js';
+import { api, apiLatest, invalidateApi, json } from '../services/api.js';
 import { PageHeader } from '../components/ui/PageHeader.jsx';
 import { Table } from '../components/ui/Table.jsx';
 import { Button } from '../components/ui/Button.jsx';
@@ -52,12 +52,14 @@ export function UsersPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const load = (targetPage = page) =>
-    api(`/users?page=${targetPage}&limit=${PAGE_SIZE}`).then((data) => {
+    apiLatest('users-list', `/users?page=${targetPage}&limit=${PAGE_SIZE}`).then((data) => {
+      if (!data) return;
       setItems(data.items);
       setTotal(data.pagination.total);
     });
   useEffect(() => {
     load(1);
+    return () => invalidateApi('users-list');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   async function create(event) {

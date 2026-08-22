@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, json } from '../services/api.js';
+import { api, apiLatest, invalidateApi, json } from '../services/api.js';
 import { PageHeader } from '../components/ui/PageHeader.jsx';
 import { Table } from '../components/ui/Table.jsx';
 import { Badge } from '../components/ui/Badge.jsx';
@@ -26,13 +26,15 @@ export function SyncPage({ embedded = false }) {
   const load = (targetPage = page, targetStatus = status) => {
     const query = new URLSearchParams({ page: String(targetPage), limit: String(PAGE_SIZE) });
     if (targetStatus) query.set('status', targetStatus);
-    return api(`/sync/operations?${query}`).then((data) => {
+    return apiLatest('sync-list', `/sync/operations?${query}`).then((data) => {
+      if (!data) return;
       setItems(data.items);
       setTotal(data.pagination.total);
     });
   };
   useEffect(() => {
     load(1, '');
+    return () => invalidateApi('sync-list');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   async function act(item) {

@@ -104,6 +104,40 @@ export const openApiDocument = {
     ['Sincronización', 'Cola offline, reintentos y conflictos'],
   ].map(([name, description]) => ({ name, description })),
   paths: {
+    '/health/live': {
+      get: {
+        tags: ['Salud'],
+        summary: 'Comprobar que el proceso y SQLite están vivos',
+        security: [],
+        responses: {
+          200: json(
+            data({ status: { type: 'string', const: 'alive' }, version: { type: 'string' } }),
+          ),
+        },
+      },
+    },
+    '/health/ready': {
+      get: {
+        tags: ['Salud'],
+        summary: 'Comprobar disponibilidad de MongoDB',
+        security: [],
+        responses: {
+          200: json(
+            data({
+              status: { type: 'string', const: 'ready' },
+              mongodb: { type: 'string', const: 'online' },
+            }),
+          ),
+          503: json(
+            data({
+              status: { type: 'string', const: 'not_ready' },
+              mongodb: { type: 'string', const: 'offline' },
+            }),
+            'MongoDB no disponible',
+          ),
+        },
+      },
+    },
     '/health': {
       get: {
         tags: ['Salud'],
@@ -672,12 +706,13 @@ export const openApiDocument = {
       },
       OutboxCounts: {
         type: 'object',
-        required: ['pending', 'syncing', 'failed', 'conflicts'],
+        required: ['pending', 'syncing', 'failed', 'conflicts', 'oldestUnresolvedAt'],
         properties: {
           pending: { type: 'integer' },
           syncing: { type: 'integer' },
           failed: { type: 'integer' },
           conflicts: { type: 'integer' },
+          oldestUnresolvedAt: { type: ['string', 'null'], format: 'date-time' },
         },
       },
       SyncStatus: { type: 'string', enum: ['PENDING', 'SYNCING', 'SYNCED', 'FAILED', 'CONFLICT'] },

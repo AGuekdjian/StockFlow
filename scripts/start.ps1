@@ -1,5 +1,6 @@
 param(
   [switch]$NoBuild,
+  [switch]$Production,
   [ValidateRange(30, 600)][int]$TimeoutSeconds = 180
 )
 
@@ -69,11 +70,17 @@ if ($LASTEXITCODE -ne 0) {
 
 Push-Location $projectRoot
 try {
-  & $dockerExecutable compose config --quiet
+  $composePrefix = @('compose')
+  if ($Production) { $composePrefix += @('-f', 'docker-compose.production.yml') }
+  & $dockerExecutable @composePrefix config --quiet
   if ($LASTEXITCODE -ne 0) { throw 'La configuración de Docker Compose no es válida.' }
 
-  $composeArguments = @('compose', 'up', '-d')
-  if (-not $NoBuild) { $composeArguments += '--build' }
+  if ($Production) {
+    & $dockerExecutable @composePrefix pull
+    if ($LASTEXITCODE -ne 0) { throw 'No se pudieron descargar las imágenes certificadas.' }
+  }
+  $composeArguments = $composePrefix + @('up', '-d')
+  if (-not $Production -and -not $NoBuild) { $composeArguments += '--build' }
   & $dockerExecutable @composeArguments
   if ($LASTEXITCODE -ne 0) { throw 'No se pudo levantar el proyecto.' }
 
@@ -84,11 +91,11 @@ try {
     try { $health = Invoke-RestMethod -Uri $healthUri -TimeoutSec 5 } catch { $health = $null }
   } while ($health.data.status -ne 'healthy' -and (Get-Date) -lt $healthDeadline)
   if ($health.data.status -ne 'healthy') {
-    & $dockerExecutable compose ps
+    & $dockerExecutable @composePrefix ps
     throw "El sistema no alcanzó estado healthy en $TimeoutSeconds segundos."
   }
 
-  & $dockerExecutable compose ps
+  & $dockerExecutable @composePrefix ps
   Write-Output 'Sistema iniciado y saludable: http://localhost:8080'
 } finally {
   Pop-Location

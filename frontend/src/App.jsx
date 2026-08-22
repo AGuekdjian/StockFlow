@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './features/auth/AuthContext.jsx';
 import { AppLayout } from './components/layout/AppLayout.jsx';
 import { pageLoaders } from './routes/pageLoaders.js';
+import { NotFoundPage } from './pages/ErrorPage.jsx';
 
 const LoginPage = lazy(() => pageLoaders.login().then((module) => ({ default: module.LoginPage })));
 const DashboardPage = lazy(() =>
@@ -94,7 +95,7 @@ export function App() {
             <Route path="auditoria" element={<Navigate to="/sistema" replace />} />
             <Route path="sincronizacion" element={<Navigate to="/sistema" replace />} />
           </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
     </AuthProvider>

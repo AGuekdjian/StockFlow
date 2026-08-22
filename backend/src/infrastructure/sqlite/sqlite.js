@@ -33,6 +33,18 @@ export function openSqlite(path) {
     resolved_by TEXT NOT NULL,
     resolved_at TEXT NOT NULL
   );`);
+  const sessionColumns = database.pragma('table_info(sessions)');
+  if (!sessionColumns.some((column) => column.name === 'user_id')) {
+    database.exec('ALTER TABLE sessions ADD COLUMN user_id TEXT');
+    const update = database.prepare('UPDATE sessions SET user_id=? WHERE session_id=?');
+    database.transaction(() => {
+      for (const row of database.prepare('SELECT session_id,data FROM sessions').all()) {
+        const userId = JSON.parse(row.data)?.user?.id;
+        if (userId) update.run(userId, row.session_id);
+      }
+    })();
+  }
+  database.exec('CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)');
   return database;
 }
 
@@ -46,4 +58,14 @@ export function outboxCounts(database) {
     if (key in result) result[key] = row.count;
   }
   return result;
+}
+
+export function outboxMetrics(database) {
+  const counts = outboxCounts(database);
+  const oldest = database
+    .prepare(
+      "SELECT created_at FROM outbox_operations WHERE status IN ('PENDING','SYNCING','FAILED','CONFLICT') ORDER BY created_at LIMIT 1",
+    )
+    .get();
+  return { ...counts, oldestUnresolvedAt: oldest?.created_at ?? null };
 }

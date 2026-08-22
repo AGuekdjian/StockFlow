@@ -15,6 +15,10 @@ const envSchema = z.object({
   COOKIE_SECURE: booleanString.default('false'),
   SESSION_HOURS: z.coerce.number().int().min(1).max(168).default(8),
   SYNC_INTERVAL_MS: z.coerce.number().int().min(1000).max(300000).default(5000),
+  SYNC_BATCH_SIZE: z.coerce.number().int().min(1).max(100).default(25),
+  BUSINESS_TIME_ZONE: z.string().min(1).default('America/Montevideo'),
+  OUTBOX_SYNCED_RETENTION_DAYS: z.coerce.number().int().min(7).max(3650).default(90),
+  SWAGGER_ENABLED: booleanString.default('true'),
 });
 
 export function loadEnv(source = process.env) {

@@ -89,6 +89,11 @@ export class OutboxRepository {
       )
       .run(new Date().toISOString(), before.toISOString()).changes;
   }
+  pruneSynced(before) {
+    return this.database
+      .prepare("DELETE FROM outbox_operations WHERE status='SYNCED' AND updated_at<?")
+      .run(before.toISOString()).changes;
+  }
   retryFailed(operationId) {
     return this.transition(operationId, 'PENDING');
   }

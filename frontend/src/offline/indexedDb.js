@@ -48,8 +48,24 @@ export const browserOutbox = {
 
 export const productCache = {
   async putMany(values) {
-    for (const value of values)
-      await transaction('readwrite', (store) => store.put(value), PRODUCTS);
+    const database = await openDatabase();
+    return new Promise((resolve, reject) => {
+      const tx = database.transaction(PRODUCTS, 'readwrite');
+      const store = tx.objectStore(PRODUCTS);
+      for (const value of values) store.put(value);
+      tx.oncomplete = () => {
+        database.close();
+        resolve();
+      };
+      tx.onerror = () => {
+        database.close();
+        reject(tx.error);
+      };
+      tx.onabort = () => {
+        database.close();
+        reject(tx.error);
+      };
+    });
   },
   async findByCode(code) {
     const normalizedCode = normalizeScannedCode(code);

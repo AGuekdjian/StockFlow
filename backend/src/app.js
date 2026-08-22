@@ -6,7 +6,7 @@ import { requestIdMiddleware } from './middlewares/request-id.middleware.js';
 import { notFoundMiddleware } from './middlewares/not-found.middleware.js';
 import { errorMiddleware } from './middlewares/error.middleware.js';
 import { noSqlSanitizeMiddleware } from './middlewares/no-sql-sanitize.middleware.js';
-import { outboxCounts } from './infrastructure/sqlite/sqlite.js';
+import { outboxMetrics } from './infrastructure/sqlite/sqlite.js';
 import session from 'express-session';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { userRouter } from './modules/users/user.routes.js';
@@ -19,6 +19,10 @@ import { dashboardRouter } from './modules/inventory/dashboard.routes.js';
 import { originMiddleware } from './middlewares/origin.middleware.js';
 import { requestLoggingMiddleware } from './middlewares/request-logging.middleware.js';
 import { swaggerRouter } from './docs/swagger.routes.js';
+import { requireAuth } from './middlewares/auth.middleware.js';
+import { requirePermission } from './middlewares/authorization.middleware.js';
+import { PERMISSIONS } from './modules/auth/permissions.js';
+import { PRODUCT } from './config/product.js';
 
 export function createApp({
   env,
@@ -61,7 +65,6 @@ export function createApp({
   );
   app.use(express.json({ limit: '100kb' }));
   app.use(noSqlSanitizeMiddleware);
-  app.use('/api', swaggerRouter());
   if (authService && users) {
     app.use(
       session({
@@ -80,6 +83,16 @@ export function createApp({
       }),
     );
     app.use('/api/auth', authRouter({ authService }));
+    if (env.SWAGGER_ENABLED !== false) {
+      const documentation = swaggerRouter();
+      if (env.NODE_ENV === 'production')
+        app.use(
+          ['/api/docs', '/api/docs/', '/api/docs/init.js', '/api/docs/assets', '/api/openapi.json'],
+          requireAuth,
+          requirePermission(PERMISSIONS.SYSTEM_READ),
+        );
+      app.use('/api', documentation);
+    }
     app.use('/api/users', userRouter({ users, authService, sessionStore, audit }));
     if (productService) app.use('/api/products', productRouter({ productService }));
     if (categories) app.use('/api/categories', referenceRouter(categories, 'CATEGORY', audit));
@@ -90,11 +103,28 @@ export function createApp({
     if (audit) app.use('/api/audit', auditRouter({ audit }));
     if (dashboard) app.use('/api/dashboard', dashboardRouter({ dashboard, sqlite, mongo }));
   }
+  if ((!authService || !users) && env.SWAGGER_ENABLED !== false) app.use('/api', swaggerRouter());
+  app.get('/api/health/live', (_req, res, next) => {
+    try {
+      sqlite.prepare('SELECT 1').get();
+      res.json({ data: { status: 'alive', version: PRODUCT.version } });
+    } catch (error) {
+      next(error);
+    }
+  });
+  app.get('/api/health/ready', (_req, res) => {
+    const ready = mongo.available;
+    res.status(ready ? 200 : 503).json({
+      data: { status: ready ? 'ready' : 'not_ready', mongodb: ready ? 'online' : 'offline' },
+    });
+  });
   app.get('/api/health', (_req, res) => {
-    const outbox = outboxCounts(sqlite);
+    const outbox = outboxMetrics(sqlite);
     const mongodb = mongo.available ? 'online' : 'offline';
     const status = mongo.available ? 'healthy' : 'degraded';
-    res.status(200).json({ data: { status, api: 'ok', mongodb, outbox, version: '1.0.0' } });
+    res
+      .status(200)
+      .json({ data: { status, api: 'ok', mongodb, outbox, version: PRODUCT.version } });
   });
   app.use(notFoundMiddleware);
   app.use(errorMiddleware(logger, env.NODE_ENV));
