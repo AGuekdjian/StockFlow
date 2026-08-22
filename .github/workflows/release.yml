@@ -43,7 +43,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - if: steps.tag.outputs.exists == 'false'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: docker/backend.Dockerfile
@@ -53,7 +53,7 @@ jobs:
             ghcr.io/aguekdjian/stockflow-backend:latest
             ghcr.io/aguekdjian/stockflow-backend:${{ github.event.workflow_run.head_sha }}
       - if: steps.tag.outputs.exists == 'false'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: docker/frontend.Dockerfile
