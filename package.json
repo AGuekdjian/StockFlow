@@ -1,6 +1,6 @@
 {
   "name": "stock-control",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -14,6 +14,10 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "version:check": "node scripts/check-version.js",
+    "release:patch": "npm version patch --workspaces --include-workspace-root --no-git-tag-version",
+    "release:minor": "npm version minor --workspaces --include-workspace-root --no-git-tag-version",
+    "release:major": "npm version major --workspaces --include-workspace-root --no-git-tag-version",
     "test": "npm run test -w backend && npm run test -w frontend",
     "test:coverage": "npm run test:coverage -w backend && npm run test:coverage -w frontend",
     "test:integration": "npm run test:integration -w backend",

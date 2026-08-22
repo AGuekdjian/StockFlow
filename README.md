@@ -2,8 +2,8 @@
 
 Aplicación interna para registrar inventario retirado por técnicos. Se ejecuta en una PC de la LAN y continúa aceptando movimientos cuando MongoDB Atlas no está disponible. MongoDB conserva el stock confirmado; SQLite almacena sesiones locales y una durable outbox de intenciones, nunca una copia autoritativa del inventario.
 
-Versión final del producto: **StockFlow 1.0.0**, creado por **Anthony Guekdjian**. La versión y
-el copyright se muestran en el pie de todas las pantallas.
+Producto **StockFlow**, creado por **Anthony Guekdjian**. La versión vigente se obtiene de los
+manifiestos del proyecto y, junto con el copyright, se muestra en el pie de todas las pantallas.
 
 ## Arquitectura
 
@@ -117,16 +117,17 @@ Arranque validado (comprueba WSL, Docker/Compose, `.env`, MongoDB Tools y health
 .\scripts\start.ps1
 ```
 
-En la PC definitiva se recomienda ejecutar las imágenes `1.0.0` certificadas por CI, sin publicar
-el puerto interno del backend:
+En la PC definitiva se ejecuta la versión certificada declarada en `package.json`, sin publicar el
+puerto interno del backend:
 
 ```powershell
 .\scripts\start.ps1 -Production
-.\scripts\update-production.ps1 -Version 1.0.0
+.\scripts\update-production.ps1
 ```
 
-El segundo comando vuelve automáticamente a la versión anterior si la actualización no alcanza
-estado saludable.
+El segundo comando usa esa versión por defecto y vuelve automáticamente a la anterior si la
+actualización no alcanza estado saludable. Para instalar una versión explícita se admite
+`-Version X.Y.Z`.
 
 Use `-NoBuild` para reutilizar las imágenes existentes. Para detener y eliminar contenedores,
 red e imágenes locales conservando SQLite, logs y backups:
@@ -163,6 +164,27 @@ npm.cmd run test:e2e
 ```
 
 Los tests de integración levantan un replica set Mongo aislado y prueban concurrencia, idempotencia, append-only y reconexión de una outbox persistida. Playwright levanta otro entorno aislado y recorre entrada/salida y RBAC desde Chromium.
+
+## Versionado y entregas
+
+StockFlow usa versionado semántico `MAJOR.MINOR.PATCH`:
+
+- `PATCH`: correcciones y mejoras técnicas compatibles.
+- `MINOR`: funcionalidades nuevas compatibles.
+- `MAJOR`: cambios incompatibles o migraciones relevantes.
+
+Antes del PR de una entrega, actualizar todos los manifiestos con uno de estos comandos:
+
+```powershell
+npm.cmd run release:patch
+npm.cmd run release:minor
+npm.cmd run release:major
+```
+
+`npm.cmd run version:check` impide que CI acepte versiones inconsistentes. Tras fusionar el PR en
+`main`, y sólo si CI queda verde, el workflow `Release` crea automáticamente el tag `vX.Y.Z`, la
+GitHub Release y las imágenes de backend y frontend con las etiquetas `X.Y.Z`, `latest` y SHA. Si
+el tag ya existe no vuelve a publicar esa versión.
 
 ## Health, logs y operación offline
 

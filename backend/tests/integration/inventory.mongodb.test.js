@@ -32,7 +32,10 @@ const operation = (id) => ({
 });
 
 beforeAll(async () => {
-  replica = await MongoMemoryReplSet.create({ replSet: { count: 1, storageEngine: 'wiredTiger' } });
+  replica = await MongoMemoryReplSet.create({
+    instanceOpts: [{ launchTimeout: 60_000 }],
+    replSet: { count: 1, storageEngine: 'wiredTiger' },
+  });
   await mongoose.connect(replica.getUri());
   const [category, location, user] = await Promise.all([
     Category.create({ name: 'Cámaras', code: 'CAM' }),
