@@ -61,6 +61,17 @@ El seed crea el administrador `info@mialarma.com.uy`, una categoría, una ubicac
 producto. Los técnicos se crean desde la pantalla Usuarios. La contraseña puede cambiarse desde
 esa misma pantalla por un administrador y el cambio cierra las sesiones activas del usuario.
 
+### Documentación de la API
+
+Con el sistema iniciado, Swagger UI está disponible en `http://localhost:3000/api/docs` durante
+desarrollo y en `http://IP_DE_LA_PC:8080/api/docs` mediante Nginx/Docker. La especificación OpenAPI
+3.1, apta para importar en clientes y generadores, se publica en `/api/openapi.json`.
+
+La documentación incluye todos los endpoints, permisos, parámetros, cuerpos, respuestas, errores,
+esquemas y reglas de validación. Para probar operaciones protegidas desde Swagger, ejecute primero
+`POST /auth/login`; la interfaz conserva automáticamente la cookie de sesión HttpOnly. No ingrese
+credenciales reales en capturas, exportaciones o entornos compartidos.
+
 ### Flujo de operación
 
 - `Registrar entrada` conserva el flujo independiente de ingreso de mercadería existente.
