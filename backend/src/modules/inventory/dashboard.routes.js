@@ -8,7 +8,15 @@ export function dashboardRouter({ dashboard, sqlite, mongo }) {
     try {
       const summary = mongo.available
         ? await dashboard.summary(req.user)
-        : { outputsToday: null, inputsToday: null, lowStock: null, outOfStock: null, latest: [] };
+        : {
+            outputsToday: null,
+            inputsToday: null,
+            outputsMonth: null,
+            inputsMonth: null,
+            lowStock: null,
+            outOfStock: null,
+            latest: [],
+          };
       res.json({
         data: {
           ...summary,

@@ -7,10 +7,9 @@ import { MovementPage } from './pages/MovementPage.jsx';
 import { ProductsPage } from './pages/ProductsPage.jsx';
 import { MovementsPage } from './pages/MovementsPage.jsx';
 import { UsersPage } from './pages/UsersPage.jsx';
-import { AuditPage } from './pages/AuditPage.jsx';
-import { SyncPage } from './pages/SyncPage.jsx';
-import { CountPage } from './pages/CountPage.jsx';
 import { CatalogsPage } from './pages/CatalogsPage.jsx';
+import { StockRegistrationPage } from './pages/StockRegistrationPage.jsx';
+import { SystemOperationsPage } from './pages/SystemOperationsPage.jsx';
 
 function Protected() {
   const { user, loading } = useAuth();
@@ -34,13 +33,15 @@ export function App() {
           <Route path="salida" element={<MovementPage type="OUT" />} />
           <Route path="devolucion" element={<MovementPage type="RETURN" />} />
           <Route
-            path="entrada"
+            path="registro-stock"
             element={
               <Admin>
-                <MovementPage type="IN" />
+                <StockRegistrationPage />
               </Admin>
             }
           />
+          <Route path="entrada" element={<Navigate to="/registro-stock" replace />} />
+          <Route path="conteo" element={<Navigate to="/registro-stock" replace />} />
           <Route path="productos" element={<ProductsPage />} />
           <Route
             path="catalogos"
@@ -52,14 +53,6 @@ export function App() {
           />
           <Route path="movimientos" element={<MovementsPage />} />
           <Route
-            path="conteo"
-            element={
-              <Admin>
-                <CountPage />
-              </Admin>
-            }
-          />
-          <Route
             path="usuarios"
             element={
               <Admin>
@@ -68,21 +61,15 @@ export function App() {
             }
           />
           <Route
-            path="auditoria"
+            path="sistema"
             element={
               <Admin>
-                <AuditPage />
+                <SystemOperationsPage />
               </Admin>
             }
           />
-          <Route
-            path="sincronizacion"
-            element={
-              <Admin>
-                <SyncPage />
-              </Admin>
-            }
-          />
+          <Route path="auditoria" element={<Navigate to="/sistema" replace />} />
+          <Route path="sincronizacion" element={<Navigate to="/sistema" replace />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

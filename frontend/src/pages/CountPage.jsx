@@ -7,7 +7,7 @@ import { Input } from '../components/ui/Input.jsx';
 import { Button } from '../components/ui/Button.jsx';
 import { Alert } from '../components/ui/Alert.jsx';
 import { PageHeader } from '../components/ui/PageHeader.jsx';
-export function CountPage() {
+export function CountPage({ embedded = false }) {
   const [product, setProduct] = useState();
   const [physical, setPhysical] = useState('');
   const [reason, setReason] = useState('Conteo físico');
@@ -45,10 +45,12 @@ export function CountPage() {
   }
   return (
     <>
-      <PageHeader
-        title="Conteo físico"
-        description="Toda diferencia genera un movimiento de ajuste auditable."
-      />
+      {!embedded && (
+        <PageHeader
+          title="Conteo físico"
+          description="Toda diferencia genera un movimiento de ajuste auditable."
+        />
+      )}
       {message && <Alert tone="info">{message}</Alert>}
       <div className="mt-4 grid gap-5 lg:grid-cols-2">
         <Card>

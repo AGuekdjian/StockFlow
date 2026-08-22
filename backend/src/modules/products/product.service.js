@@ -40,7 +40,14 @@ export class ProductService {
   async create(input, context) {
     await this.ensureReferences(input.categoryId, input.locationId);
     try {
-      const product = await this.products.create(input);
+      const productInput = { ...input };
+      if (productInput.internalCode.endsWith('-')) {
+        productInput.internalCode = await this.products.nextInternalCode(
+          productInput.internalCode,
+          productInput.categoryId,
+        );
+      }
+      const product = await this.products.create(productInput);
       this.logger.info({ event: 'product.created', productId: String(product._id), ...context });
       await this.audit?.record({
         ...context,

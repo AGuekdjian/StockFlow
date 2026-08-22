@@ -10,7 +10,10 @@ async function login(page, email, password) {
 test('admin registers an entry and sees the append-only movement', async ({ page }) => {
   await login(page, 'admin@example.com', 'Admin-password-123!');
   await expect(page.getByRole('heading', { name: 'Resumen operacional' })).toBeVisible();
-  await page.getByRole('link', { name: 'Registrar entrada' }).click();
+  await expect(page.getByText('Salidas del mes')).toBeVisible();
+  await expect(page.getByText('Entradas del mes')).toBeVisible();
+  await page.getByLabel('Principal').getByRole('link', { name: 'Registrar stock' }).click();
+  await expect(page.getByRole('tab', { name: 'Conteo y ajuste' })).toBeVisible();
   await page.getByLabel('Escanear código').fill('779000000001');
   await page.getByLabel('Escanear código').press('Enter');
   await expect(page.getByText('Cámara IP de prueba')).toBeVisible();
@@ -31,21 +34,25 @@ test('admin registers an entry and sees the append-only movement', async ({ page
 
   await page.getByRole('link', { name: 'Productos' }).click();
   await page.getByRole('button', { name: 'Nuevo producto' }).click();
-  await page.getByLabel('Código interno').fill('ACC-900001');
+  await page.getByLabel('Código interno o prefijo correlativo').fill('ACC-');
   await page.getByLabel('Nombre').fill('Accesorio E2E');
   await page.getByLabel('Categoría').selectOption({ index: 1 });
   await page.getByLabel('Ubicación').selectOption({ index: 1 });
   await page.getByRole('button', { name: 'Crear producto' }).click();
-  const productRow = page.getByRole('row').filter({ hasText: 'ACC-900001' });
+  const productRow = page.getByRole('row').filter({ hasText: 'ACC-000001' });
   await expect(productRow).toContainText('Accesorio E2E');
   await productRow.getByRole('button', { name: 'Editar' }).click();
   await page.getByLabel('Nombre').fill('Accesorio E2E actualizado');
   await page.getByRole('button', { name: 'Guardar cambios' }).click();
-  const updatedRow = page.getByRole('row').filter({ hasText: 'ACC-900001' });
+  const updatedRow = page.getByRole('row').filter({ hasText: 'ACC-000001' });
   await expect(updatedRow).toContainText('actualizado');
   await updatedRow.getByRole('button', { name: 'Desactivar' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Desactivar' }).click();
-  await expect(page.getByRole('row').filter({ hasText: 'ACC-900001' })).toContainText('Inactivo');
+  await expect(page.getByRole('row').filter({ hasText: 'ACC-000001' })).toContainText('Inactivo');
+
+  await page.getByRole('link', { name: 'Auditoría y sincronización' }).click();
+  await expect(page.getByRole('tab', { name: 'Sincronización' })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Auditoría' })).toBeVisible();
 
   await page.getByRole('link', { name: 'Usuarios' }).click();
   const adminRow = page.getByRole('row').filter({ hasText: 'admin@example.com' });
@@ -58,7 +65,7 @@ test('admin registers an entry and sees the append-only movement', async ({ page
 
 test('technician completes the fast OUT flow and cannot access admin pages', async ({ page }) => {
   await login(page, 'tecnico@example.com', 'Tech-password-123!');
-  await expect(page.getByRole('link', { name: 'Registrar entrada' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Registrar stock' })).toHaveCount(0);
   await page.getByRole('link', { name: 'Registrar salida' }).click();
   await page.getByLabel('Escanear código').fill('CAM-000001');
   await page.getByLabel('Escanear código').press('Enter');

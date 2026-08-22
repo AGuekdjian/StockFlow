@@ -56,6 +56,18 @@ El seed crea el administrador `info@mialarma.com.uy`, una categoría, una ubicac
 producto. Los técnicos se crean desde la pantalla Usuarios. La contraseña puede cambiarse desde
 esa misma pantalla por un administrador y el cambio cierra las sesiones activas del usuario.
 
+### Flujo de operación
+
+- `Registrar stock` reúne la entrada normal y el conteo físico. Un conteo nunca modifica el stock
+  directamente: genera un movimiento de ajuste trazable.
+- Al crear un producto se puede escribir el código completo o sólo un prefijo terminado en guion,
+  por ejemplo `CAM-`. En este último caso el backend asigna de forma atómica el siguiente correlativo
+  de seis dígitos para esa categoría (`CAM-000002`, etc.), incluso ante altas simultáneas.
+- `Auditoría y sincronización` reúne en una pantalla la outbox, los conflictos y el registro
+  inmutable de acciones.
+- El resumen operacional muestra entradas y salidas de hoy y del mes actual, además de alertas de
+  stock.
+
 ## Docker y uso en LAN
 
 ### Preparar una PC nueva
@@ -127,7 +139,7 @@ Si Atlas cae:
 2. La salida se guarda en la outbox y aparece como pendiente; no se muestra como confirmada.
 3. Al volver Atlas, el worker evalúa la intención contra el stock actual.
 4. Si sigue siendo válida, queda `SYNCED`; si no, queda `CONFLICT` sin alterar stock.
-5. Un administrador revisa `/sincronizacion` y resuelve mediante una nueva operación o un descarte motivado. El conflicto original permanece trazable.
+5. Un administrador revisa `/sistema` (Auditoría y sincronización) y resuelve mediante una nueva operación o un descarte motivado. El conflicto original permanece trazable.
 
 Tras una caída de PC o contenedor, iniciar Compose normalmente. El worker devuelve locks `SYNCING` abandonados a `PENDING`. Antes de intervenir manualmente, revisar health, logs y el `operationId`; reenviar el mismo ID es seguro, inventar otro puede duplicar la intención.
 
