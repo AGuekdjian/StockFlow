@@ -23,7 +23,9 @@ jobs:
           fetch-depth: 0
       - id: version
         name: Read product version
-        run: echo "value=$(node -p \"require('./package.json').version\")" >> "$GITHUB_OUTPUT"
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
       - id: tag
         name: Check whether release already exists
         env:
