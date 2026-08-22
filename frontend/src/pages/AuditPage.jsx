@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { api } from '../services/api.js';
 import { PageHeader } from '../components/ui/PageHeader.jsx';
 import { Table } from '../components/ui/Table.jsx';
@@ -7,6 +7,18 @@ import { Card } from '../components/ui/Card.jsx';
 import { Input } from '../components/ui/Input.jsx';
 import { Button } from '../components/ui/Button.jsx';
 const PAGE_SIZE = 20;
+const AuditRow = memo(function AuditRow({ item }) {
+  return (
+    <tr>
+      <td className="px-4 py-3">{new Date(item.createdAt).toLocaleString()}</td>
+      <td className="px-4 py-3 font-semibold">{item.action}</td>
+      <td className="px-4 py-3">{item.entity}</td>
+      <td className="px-4 py-3 font-mono text-xs">{item.userId}</td>
+      <td className="px-4 py-3 font-mono text-xs">{item.requestId}</td>
+      <td className="px-4 py-3 font-mono text-xs">{item.operationId}</td>
+    </tr>
+  );
+});
 export function AuditPage({ embedded = false }) {
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
@@ -70,14 +82,7 @@ export function AuditPage({ embedded = false }) {
         empty={!items.length}
       >
         {items.map((item) => (
-          <tr key={item._id}>
-            <td className="px-4 py-3">{new Date(item.createdAt).toLocaleString()}</td>
-            <td className="px-4 py-3 font-semibold">{item.action}</td>
-            <td className="px-4 py-3">{item.entity}</td>
-            <td className="px-4 py-3 font-mono text-xs">{item.userId}</td>
-            <td className="px-4 py-3 font-mono text-xs">{item.requestId}</td>
-            <td className="px-4 py-3 font-mono text-xs">{item.operationId}</td>
-          </tr>
+          <AuditRow key={item._id} item={item} />
         ))}
       </Table>
       <Pagination

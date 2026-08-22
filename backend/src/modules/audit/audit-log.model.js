@@ -12,8 +12,9 @@ const schema = new mongoose.Schema(
   },
   { timestamps: { createdAt: true, updatedAt: false }, versionKey: false },
 );
-schema.index({ createdAt: -1 });
-schema.index({ action: 1, createdAt: -1 });
+schema.index({ createdAt: -1, _id: -1 });
+schema.index({ action: 1, createdAt: -1, _id: -1 });
+schema.index({ userId: 1, createdAt: -1, _id: -1 });
 for (const operation of [
   'updateOne',
   'updateMany',
