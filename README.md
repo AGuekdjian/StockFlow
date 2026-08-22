@@ -10,6 +10,11 @@ Aplicación interna para registrar inventario retirado por técnicos. Se ejecuta
 - SQLite: outbox, locks/estado de sincronización y sesiones necesarias para operar durante una caída de Atlas.
 - Nginx: sirve el build frontend y envía `/api` al backend dentro de Compose.
 
+El frontend divide el JavaScript por pantalla y precarga una ruta sólo cuando el usuario apunta o
+enfoca su enlace. Las tablas pesadas están aisladas de los estados de formularios para evitar
+rerenders por cada tecla. Nginx comprime las respuestas y conserva durante un año únicamente los
+assets versionados por hash; `index.html` nunca queda fijado en caché.
+
 Cada operación de stock lleva un `operationId` UUID único. El servidor la persiste primero en SQLite, intenta una transacción MongoDB y responde `SYNCED` o `PENDING`. Al reconectar, el worker reclama una operación por vez, aplica backoff y evalúa la intención contra el stock actual. Los conflictos quedan visibles y sólo se resuelven explícitamente.
 
 ## Requisitos
