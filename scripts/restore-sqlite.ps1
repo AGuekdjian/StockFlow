@@ -12,7 +12,10 @@ if (-not (Test-Path -LiteralPath $resolvedArchive -PathType Leaf)) {
 $leaf = [System.IO.Path]::GetFileName($resolvedArchive)
 $dockerCommand = Get-Command docker -ErrorAction Stop
 $composePrefix = @('compose')
-if ($Production) { $composePrefix += @('-f', 'docker-compose.production.yml') }
+if ($Production) {
+  $env:STOCKFLOW_VERSION = (Get-Content -LiteralPath (Join-Path $projectRoot 'package.json') -Raw | ConvertFrom-Json).version
+  $composePrefix += @('-f', 'docker-compose.production.yml')
+}
 
 Push-Location $projectRoot
 try {
@@ -31,5 +34,6 @@ try {
   if ($health.data.status -ne 'alive') { throw 'StockFlow no quedó vivo después de restaurar SQLite.' }
   Write-Output 'SQLite restaurado y StockFlow operativo. Verifique outbox, conflictos y sesiones.'
 } finally {
+  if ($Production) { Remove-Item Env:STOCKFLOW_VERSION -ErrorAction SilentlyContinue }
   Pop-Location
 }

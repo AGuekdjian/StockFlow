@@ -1,6 +1,7 @@
+/* global __APP_VERSION__ */
 export const PRODUCT = Object.freeze({
   name: 'StockFlow',
-  version: '1.0.0',
+  version: __APP_VERSION__,
   author: 'Anthony Guekdjian',
   copyrightYear: 2026,
 });

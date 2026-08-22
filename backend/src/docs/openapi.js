@@ -86,7 +86,7 @@ export const openApiDocument = {
   openapi: '3.1.0',
   info: {
     title: 'StockFlow API',
-    version: '1.0.0',
+    version: PRODUCT.version,
     description:
       'API del sistema de control de stock. La autenticación usa la cookie de sesión `stock.sid`; primero ejecute Login y Swagger conservará la cookie automáticamente.',
   },
@@ -765,3 +765,4 @@ export const openApiDocument = {
     },
   },
 };
+import { PRODUCT } from '../config/product.js';

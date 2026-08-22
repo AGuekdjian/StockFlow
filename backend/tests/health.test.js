@@ -5,6 +5,7 @@ import { openSqlite } from '../src/infrastructure/sqlite/sqlite.js';
 import express from 'express';
 import { z } from 'zod';
 import { validate } from '../src/middlewares/validation.middleware.js';
+import { PRODUCT } from '../src/config/product.js';
 
 const databases = [];
 function fixture(available = false) {
@@ -38,7 +39,7 @@ describe('GET /api/health', () => {
       api: 'ok',
       mongodb: 'offline',
       outbox: { pending: 0, syncing: 0, failed: 0, conflicts: 0, oldestUnresolvedAt: null },
-      version: '1.0.0',
+      version: PRODUCT.version,
     });
     expect(response.headers['x-request-id']).toMatch(/^req_/);
   });
@@ -47,7 +48,7 @@ describe('GET /api/health', () => {
     await request(app)
       .get('/api/health/live')
       .expect(200, {
-        data: { status: 'alive', version: '1.0.0' },
+        data: { status: 'alive', version: PRODUCT.version },
       });
     await request(app)
       .get('/api/health/ready')

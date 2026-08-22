@@ -71,7 +71,11 @@ if ($LASTEXITCODE -ne 0) {
 Push-Location $projectRoot
 try {
   $composePrefix = @('compose')
-  if ($Production) { $composePrefix += @('-f', 'docker-compose.production.yml') }
+  if ($Production) {
+    $env:STOCKFLOW_VERSION = (Get-Content -LiteralPath (Join-Path $projectRoot 'package.json') -Raw | ConvertFrom-Json).version
+    $composePrefix += @('-f', 'docker-compose.production.yml')
+    Write-Output "Iniciando la versión certificada $env:STOCKFLOW_VERSION..."
+  }
   & $dockerExecutable @composePrefix config --quiet
   if ($LASTEXITCODE -ne 0) { throw 'La configuración de Docker Compose no es válida.' }
 
@@ -98,5 +102,6 @@ try {
   & $dockerExecutable @composePrefix ps
   Write-Output 'Sistema iniciado y saludable: http://localhost:8080'
 } finally {
+  if ($Production) { Remove-Item Env:STOCKFLOW_VERSION -ErrorAction SilentlyContinue }
   Pop-Location
 }

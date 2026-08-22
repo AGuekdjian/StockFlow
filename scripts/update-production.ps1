@@ -1,13 +1,18 @@
 param(
-  [ValidatePattern('^[0-9]+\.[0-9]+\.[0-9]+$')][string]$Version = '1.0.0',
+  [string]$Version,
   [ValidateRange(30, 600)][int]$TimeoutSeconds = 180
 )
 $ErrorActionPreference = 'Stop'
 $projectRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+$packageVersion = (Get-Content -LiteralPath (Join-Path $projectRoot 'package.json') -Raw | ConvertFrom-Json).version
+if (-not $Version) { $Version = $packageVersion }
+if ($Version -notmatch '^[0-9]+\.[0-9]+\.[0-9]+$') {
+  throw "La versión '$Version' no cumple el formato SemVer X.Y.Z."
+}
 $statePath = Join-Path $projectRoot '.stockflow-version'
 $previousVersion = if (Test-Path -LiteralPath $statePath) {
   (Get-Content -LiteralPath $statePath -Raw).Trim()
-} else { '1.0.0' }
+} else { $packageVersion }
 $dockerCommand = Get-Command docker -ErrorAction Stop
 
 Push-Location $projectRoot
