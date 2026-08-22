@@ -4,7 +4,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary', 'lcov'],
-      thresholds: { statements: 45, branches: 40, functions: 45, lines: 45 },
+      thresholds: { statements: 50, branches: 45, functions: 50, lines: 50 },
       exclude: ['scripts/**', 'src/server.js', '**/*.config.js'],
     },
   },

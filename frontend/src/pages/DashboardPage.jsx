@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '../services/api.js';
+import { apiLatest, invalidateApi } from '../services/api.js';
 import { Card } from '../components/ui/Card.jsx';
 import { PageHeader } from '../components/ui/PageHeader.jsx';
 import { Link } from 'react-router-dom';
@@ -8,7 +8,8 @@ export function DashboardPage() {
   const { user } = useAuth();
   const [data, setData] = useState();
   useEffect(() => {
-    api('/dashboard').then(setData);
+    apiLatest('dashboard', '/dashboard').then((value) => value && setData(value));
+    return () => invalidateApi('dashboard');
   }, []);
   const metrics = [
     ['Salidas hoy', data?.outputsToday],
@@ -37,7 +38,7 @@ export function DashboardPage() {
         {[
           ['Nueva salida rápida', '/salida'],
           ...(user.role === 'ADMIN' ? [['Registrar entrada', '/entrada']] : []),
-          ['Escanear producto', '/scanner'],
+          ['Escanear producto', '/salida'],
           ['Ver movimientos', '/movimientos'],
           ...(user.role === 'ADMIN' ? [['Auditoría y sincronización', '/sistema']] : []),
         ].map(([label, href]) => (

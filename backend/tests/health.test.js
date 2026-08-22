@@ -37,10 +37,41 @@ describe('GET /api/health', () => {
       status: 'degraded',
       api: 'ok',
       mongodb: 'offline',
-      outbox: { pending: 0, syncing: 0, failed: 0, conflicts: 0 },
+      outbox: { pending: 0, syncing: 0, failed: 0, conflicts: 0, oldestUnresolvedAt: null },
       version: '1.0.0',
     });
     expect(response.headers['x-request-id']).toMatch(/^req_/);
+  });
+  it('separates process liveness from MongoDB readiness', async () => {
+    const app = fixture(false);
+    await request(app)
+      .get('/api/health/live')
+      .expect(200, {
+        data: { status: 'alive', version: '1.0.0' },
+      });
+    await request(app)
+      .get('/api/health/ready')
+      .expect(503, {
+        data: { status: 'not_ready', mongodb: 'offline' },
+      });
+  });
+  it('protects production documentation without protecting liveness', async () => {
+    const sqlite = openSqlite(':memory:');
+    databases.push(sqlite);
+    const app = createApp({
+      env: {
+        FRONTEND_ORIGIN: 'http://localhost:8080',
+        NODE_ENV: 'production',
+        SESSION_SECRET: 'production-test-secret-at-least-32-characters',
+      },
+      logger: { info() {}, warn() {}, error() {} },
+      mongo: { available: false },
+      sqlite,
+      authService: {},
+      users: {},
+    });
+    await request(app).get('/api/docs').expect(401);
+    await request(app).get('/api/health/live').expect(200);
   });
   it('returns the consistent public error envelope', async () => {
     const response = await request(fixture()).get('/missing').expect(404);

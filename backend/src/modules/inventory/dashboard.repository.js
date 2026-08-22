@@ -1,11 +1,16 @@
 import { StockMovement } from './stock-movement.model.js';
 import { Product } from '../products/product.model.js';
 import mongoose from 'mongoose';
+import {
+  currentBusinessPeriods,
+  DEFAULT_BUSINESS_TIME_ZONE,
+} from '../../shared/time/business-time.js';
 export class DashboardRepository {
+  constructor(timeZone = DEFAULT_BUSINESS_TIME_ZONE) {
+    this.timeZone = timeZone;
+  }
   async summary(user) {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-    const monthStart = new Date(start.getFullYear(), start.getMonth(), 1);
+    const { dayStart: start, monthStart } = currentBusinessPeriods(this.timeZone);
     const movementFilter =
       user.role === 'ADMIN' ? {} : { userId: new mongoose.Types.ObjectId(user.id) };
     const [movementTotals, lowStock, outOfStock, latest] = await Promise.all([

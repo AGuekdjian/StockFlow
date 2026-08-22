@@ -26,9 +26,15 @@ export class SqliteSessionStore extends session.Store {
         : Date.now() + 8 * 60 * 60 * 1000;
       this.database
         .prepare(
-          `INSERT INTO sessions(session_id,data,expires_at,updated_at) VALUES(?,?,?,?) ON CONFLICT(session_id) DO UPDATE SET data=excluded.data, expires_at=excluded.expires_at, updated_at=excluded.updated_at`,
+          `INSERT INTO sessions(session_id,data,expires_at,updated_at,user_id) VALUES(?,?,?,?,?) ON CONFLICT(session_id) DO UPDATE SET data=excluded.data, expires_at=excluded.expires_at, updated_at=excluded.updated_at, user_id=excluded.user_id`,
         )
-        .run(id, JSON.stringify(value), expiresAt, new Date().toISOString());
+        .run(
+          id,
+          JSON.stringify(value),
+          expiresAt,
+          new Date().toISOString(),
+          value.user?.id ?? null,
+        );
       callback();
     } catch (error) {
       callback(error);
@@ -50,13 +56,6 @@ export class SqliteSessionStore extends session.Store {
       .changes;
   }
   destroyUserSessions(userId) {
-    const rows = this.database.prepare('SELECT session_id,data FROM sessions').all();
-    const remove = this.database.prepare('DELETE FROM sessions WHERE session_id=?');
-    return this.database.transaction(() =>
-      rows.reduce((count, row) => {
-        const value = JSON.parse(row.data);
-        return value.user?.id === userId ? count + remove.run(row.session_id).changes : count;
-      }, 0),
-    )();
+    return this.database.prepare('DELETE FROM sessions WHERE user_id=?').run(userId).changes;
   }
 }

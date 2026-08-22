@@ -47,6 +47,7 @@ jobs:
           push: true
           tags: |
             ghcr.io/aguekdjian/stockflow-backend:latest
+            ghcr.io/aguekdjian/stockflow-backend:1.0.0
             ghcr.io/aguekdjian/stockflow-backend:${{ github.sha }}
       - uses: docker/build-push-action@v6
         with:
@@ -55,4 +56,5 @@ jobs:
           push: true
           tags: |
             ghcr.io/aguekdjian/stockflow-frontend:latest
+            ghcr.io/aguekdjian/stockflow-frontend:1.0.0
             ghcr.io/aguekdjian/stockflow-frontend:${{ github.sha }}

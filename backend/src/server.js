@@ -34,17 +34,24 @@ const audit = new AuditRepository();
 const productService = new ProductService({ products: new ProductRepository(), logger, audit });
 const categories = new CategoryRepository();
 const locations = new LocationRepository();
-const inventoryService = new InventoryService({ inventory: new InventoryRepository(), logger });
+const inventoryService = new InventoryService({
+  inventory: new InventoryRepository(),
+  logger,
+  timeZone: env.BUSINESS_TIME_ZONE,
+});
 const sessionStore = new SqliteSessionStore(sqlite);
 const outbox = new OutboxRepository(sqlite);
 const coordinator = new StockOperationCoordinator({ outbox, inventoryService, mongo, logger });
-const dashboard = new DashboardRepository();
+const dashboard = new DashboardRepository(env.BUSINESS_TIME_ZONE);
 const syncManager = new SyncManager({
   outbox,
   coordinator,
   mongo,
   logger,
   intervalMs: env.SYNC_INTERVAL_MS,
+  batchSize: env.SYNC_BATCH_SIZE,
+  sessionStore,
+  syncedRetentionDays: env.OUTBOX_SYNCED_RETENTION_DAYS,
 });
 const app = createApp({
   env,

@@ -1,0 +1,40 @@
+services:
+  backend:
+    image: ghcr.io/aguekdjian/stockflow-backend:${STOCKFLOW_VERSION:-1.0.0}
+    env_file: .env
+    environment:
+      PORT: 3000
+      SQLITE_PATH: /app/data/outbox.sqlite
+      LOG_PATH: /app/logs
+      BACKUP_PATH: /app/backups
+      NODE_ENV: production
+    volumes:
+      - sqlite-data:/app/data
+      - application-logs:/app/logs
+      - ${HOST_BACKUP_PATH:-./backups}:/app/backups
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/health/live').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  frontend:
+    image: ghcr.io/aguekdjian/stockflow-frontend:${STOCKFLOW_VERSION:-1.0.0}
+    ports:
+      - ${FRONTEND_PORT:-8080}:80
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, wget, -q, --spider, http://127.0.0.1/]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+volumes:
+  sqlite-data:
+  application-logs:

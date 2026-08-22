@@ -4,6 +4,8 @@ import { openApiDocument } from '../src/docs/openapi.js';
 
 const expectedOperations = [
   'GET /health',
+  'GET /health/live',
+  'GET /health/ready',
   'POST /auth/login',
   'POST /auth/logout',
   'GET /auth/me',

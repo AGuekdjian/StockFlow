@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth } from '../../middlewares/auth.middleware.js';
-import { outboxCounts } from '../../infrastructure/sqlite/sqlite.js';
+import { outboxMetrics } from '../../infrastructure/sqlite/sqlite.js';
 export function dashboardRouter({ dashboard, sqlite, mongo }) {
   const router = Router();
   router.use(requireAuth);
@@ -21,7 +21,7 @@ export function dashboardRouter({ dashboard, sqlite, mongo }) {
         data: {
           ...summary,
           mongodb: mongo.available ? 'online' : 'offline',
-          outbox: outboxCounts(sqlite),
+          outbox: outboxMetrics(sqlite),
         },
       });
     } catch (error) {

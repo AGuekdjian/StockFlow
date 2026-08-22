@@ -1,5 +1,6 @@
 import { AppError } from '../../shared/errors/app-error.js';
 import { roleHasPermission, PERMISSIONS } from '../auth/permissions.js';
+import { businessDayRange, DEFAULT_BUSINESS_TIME_ZONE } from '../../shared/time/business-time.js';
 
 const typePermissions = {
   IN: PERMISSIONS.STOCK_IN,
@@ -22,9 +23,10 @@ const publicErrors = {
 };
 
 export class InventoryService {
-  constructor({ inventory, logger }) {
+  constructor({ inventory, logger, timeZone = DEFAULT_BUSINESS_TIME_ZONE }) {
     this.inventory = inventory;
     this.logger = logger;
+    this.timeZone = timeZone;
   }
   assertPermission(input, context) {
     if (!roleHasPermission(context.role, typePermissions[input.type]))
@@ -75,11 +77,16 @@ export class InventoryService {
         $regex: query.client.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
         $options: 'i',
       };
-    if (query.dateFrom || query.dateTo)
+    if (query.dateFrom || query.dateTo) {
+      const from = query.dateFrom
+        ? businessDayRange(query.dateFrom, this.timeZone).from
+        : undefined;
+      const to = query.dateTo ? businessDayRange(query.dateTo, this.timeZone).to : undefined;
       filter.createdAt = {
-        ...(query.dateFrom ? { $gte: new Date(query.dateFrom) } : {}),
-        ...(query.dateTo ? { $lte: new Date(`${query.dateTo}T23:59:59.999Z`) } : {}),
+        ...(from ? { $gte: from } : {}),
+        ...(to ? { $lte: to } : {}),
       };
+    }
     const [items, total] = await this.inventory.list({ ...query, filter });
     return [items.map((item) => ({ ...item, syncStatus: 'SYNCED' })), total];
   }

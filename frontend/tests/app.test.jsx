@@ -23,4 +23,16 @@ it('shows the accessible login form when there is no active session', async () =
   expect(await screen.findByRole('heading', { name: 'Iniciar sesión' })).toBeInTheDocument();
   expect(screen.getByLabelText('Email')).toBeInTheDocument();
   expect(screen.getByLabelText('Contraseña')).toBeInTheDocument();
+  expect(screen.getByRole('contentinfo')).toHaveTextContent('StockFlow v1.0.0');
+});
+
+it('shows a real not-found page instead of silently redirecting', async () => {
+  vi.stubGlobal('fetch', vi.fn());
+  render(
+    <MemoryRouter initialEntries={['/does-not-exist']}>
+      <App />
+    </MemoryRouter>,
+  );
+  expect(screen.getByRole('heading', { name: 'Página no encontrada' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Volver al inicio' })).toBeInTheDocument();
 });

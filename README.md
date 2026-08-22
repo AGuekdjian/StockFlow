@@ -2,6 +2,9 @@
 
 Aplicación interna para registrar inventario retirado por técnicos. Se ejecuta en una PC de la LAN y continúa aceptando movimientos cuando MongoDB Atlas no está disponible. MongoDB conserva el stock confirmado; SQLite almacena sesiones locales y una durable outbox de intenciones, nunca una copia autoritativa del inventario.
 
+Versión final del producto: **StockFlow 1.0.0**, creado por **Anthony Guekdjian**. La versión y
+el copyright se muestran en el pie de todas las pantallas.
+
 ## Arquitectura
 
 - `frontend`: React, Vite, JavaScript, Tailwind, React Router e IndexedDB como protección antes de que un request llegue al servidor.
@@ -39,6 +42,11 @@ Variables principales:
 - `BACKEND_PORT`, `FRONTEND_PORT` y `HOST_BACKUP_PATH`: puertos y carpeta publicados por Compose. Dentro del contenedor, SQLite, logs y backups usan rutas fijas persistentes.
 - `COOKIE_SECURE=true`: sólo cuando la aplicación se publica mediante HTTPS; para HTTP dentro de LAN debe quedar `false`.
 - `SESSION_HOURS` y `SYNC_INTERVAL_MS`: expiración de sesión y frecuencia base del worker.
+- `BUSINESS_TIME_ZONE`: zona usada para días, meses y filtros; por defecto `America/Montevideo`.
+- `SYNC_BATCH_SIZE` y `OUTBOX_SYNCED_RETENTION_DAYS`: drenaje y retención local de operaciones ya
+  confirmadas. Pendientes, fallos y conflictos nunca se purgan automáticamente.
+- `SWAGGER_ENABLED`: permite deshabilitar Swagger. En producción, si está activo, exige una sesión
+  administrativa.
 
 En Atlas, permitir únicamente la IP pública de salida de la empresa, crear un usuario dedicado para la base y habilitar backups administrados cuando el plan lo permita. No copiar la URI a logs o capturas.
 
@@ -109,6 +117,17 @@ Arranque validado (comprueba WSL, Docker/Compose, `.env`, MongoDB Tools y health
 .\scripts\start.ps1
 ```
 
+En la PC definitiva se recomienda ejecutar las imágenes `1.0.0` certificadas por CI, sin publicar
+el puerto interno del backend:
+
+```powershell
+.\scripts\start.ps1 -Production
+.\scripts\update-production.ps1 -Version 1.0.0
+```
+
+El segundo comando vuelve automáticamente a la versión anterior si la actualización no alcanza
+estado saludable.
+
 Use `-NoBuild` para reutilizar las imágenes existentes. Para detener y eliminar contenedores,
 red e imágenes locales conservando SQLite, logs y backups:
 
@@ -147,7 +166,14 @@ Los tests de integración levantan un replica set Mongo aislado y prueban concur
 
 ## Health, logs y operación offline
 
-`GET /api/health` devuelve `healthy`, `degraded` o `unhealthy`, conectividad de Mongo y cantidades `pending`, `syncing`, `failed` y `conflicts`. La cabecera `x-request-id` permite correlacionar errores, logs y auditoría.
+`GET /api/health` devuelve el estado operativo, conectividad de Mongo, cantidades de outbox y la
+intención no resuelta más antigua. `GET /api/health/live` comprueba proceso y SQLite;
+`GET /api/health/ready` indica si Mongo está disponible. La cabecera `x-request-id` permite
+correlacionar errores, logs y auditoría.
+
+El frontend muestra una página 404 para direcciones inexistentes, una página recuperable ante
+errores inesperados de renderizado y un aviso global para fallos de API o red. Cuando el backend
+entrega un `requestId`, se muestra como código de seguimiento sin revelar detalles internos.
 
 Los logs JSON rotan diariamente o al alcanzar 10 MB, comprimen archivos anteriores y conservan 14. En Compose viven en `application-logs`. Nunca incluyen passwords, cookies, tokens, secretos o la URI de Mongo.
 
@@ -167,6 +193,17 @@ Backup manual con retención de 7 diarios y 4 semanales:
 
 ```powershell
 .\scripts\backup.ps1 -MongoUri $env:MONGODB_URI -BackupPath $env:BACKUP_PATH
+```
+
+El procedimiento respalda MongoDB y crea mediante la API online de SQLite una copia consistente de
+la outbox, conflictos y sesiones. `HOST_BACKUP_PATH` debe coincidir con `BackupPath`. Copiar además
+los archivos a otro dispositivo protegido y ensayar restauraciones periódicamente.
+
+La restauración local exige una ventana breve sin operaciones y conserva automáticamente una copia
+previa:
+
+```powershell
+.\scripts\restore-sqlite.ps1 -ArchivePath '.\backups\sqlite_....sqlite'
 ```
 
 Programar ese comando diariamente con el Programador de tareas de Windows bajo una cuenta con acceso mínimo a la carpeta. Proteger la URI mediante un secret del sistema o wrapper no versionado. Supervisar el código de salida y copiar backups a otro dispositivo protegido.

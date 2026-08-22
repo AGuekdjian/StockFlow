@@ -2,6 +2,8 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../../features/auth/AuthContext.jsx';
 import { ConnectivityStatus } from './ConnectivityStatus.jsx';
 import { preloadRoute } from '../../routes/pageLoaders.js';
+import { ProductFooter } from './ProductFooter.jsx';
+import { GlobalErrorNotice } from '../errors/GlobalErrorNotice.jsx';
 const allLinks = [
   { to: '/', label: 'Resumen' },
   { to: '/salida', label: 'Registrar salida' },
@@ -18,6 +20,7 @@ export function AppLayout() {
   const links = allLinks.filter((link) => !link.admin || user.role === 'ADMIN');
   return (
     <div className="min-h-screen bg-slate-100 lg:grid lg:grid-cols-[240px_1fr]">
+      <GlobalErrorNotice />
       <aside className="border-b border-slate-800 bg-slate-950 text-slate-100 lg:min-h-screen lg:border-b-0 lg:border-r">
         <div className="flex h-16 items-center border-b border-slate-800 px-5 font-bold">
           Control de stock
@@ -39,7 +42,7 @@ export function AppLayout() {
           ))}
         </nav>
       </aside>
-      <div className="min-w-0">
+      <div className="flex min-w-0 flex-col">
         <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-5">
           <ConnectivityStatus />
           <div className="flex items-center gap-3 text-sm">
@@ -49,9 +52,10 @@ export function AppLayout() {
             </button>
           </div>
         </header>
-        <main className="mx-auto max-w-7xl p-5 lg:p-8">
+        <main className="mx-auto w-full max-w-7xl flex-1 p-5 lg:p-8">
           <Outlet />
         </main>
+        <ProductFooter />
       </div>
     </div>
   );

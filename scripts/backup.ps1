@@ -18,7 +18,22 @@ $stamp = Get-Date -Format 'yyyy-MM-dd_HHmmss'
 $dailyPath = Join-Path $resolvedRoot "daily_$stamp.archive.gz"
 & $mongoDumpExecutable --uri=$MongoUri --archive=$dailyPath --gzip
 if ($LASTEXITCODE -ne 0) { throw 'mongodump falló; no se modificó la retención.' }
+
+$projectRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+$dockerCommand = Get-Command docker -ErrorAction SilentlyContinue
+if (-not $dockerCommand) { throw 'Docker es obligatorio para respaldar la outbox SQLite activa.' }
+Push-Location $projectRoot
+try {
+  & $dockerCommand.Source compose exec -T backend node backend/scripts/backup-sqlite.js
+  if ($LASTEXITCODE -ne 0) { throw 'El backup consistente de SQLite falló.' }
+} finally {
+  Pop-Location
+}
+if (-not (Get-ChildItem -LiteralPath $resolvedRoot -Filter 'sqlite_*.sqlite' -File | Select-Object -First 1)) {
+  throw 'Docker creó el backup SQLite fuera de BackupPath. Verifique HOST_BACKUP_PATH y BACKUP_PATH.'
+}
 Get-ChildItem -LiteralPath $resolvedRoot -Filter 'daily_*.archive.gz' -File | Sort-Object LastWriteTime -Descending | Select-Object -Skip 7 | Remove-Item -Force
+Get-ChildItem -LiteralPath $resolvedRoot -Filter 'sqlite_*.sqlite' -File | Sort-Object LastWriteTime -Descending | Select-Object -Skip 7 | Remove-Item -Force
 if ((Get-Date).DayOfWeek -eq 'Sunday') {
   $weeklyPath = Join-Path $resolvedRoot "weekly_$stamp.archive.gz"
   Copy-Item -LiteralPath $dailyPath -Destination $weeklyPath

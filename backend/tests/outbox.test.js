@@ -30,6 +30,38 @@ describe('durable outbox state machine', () => {
     expect(outbox.recoverAbandoned(new Date(1))).toBe(1);
     expect(outbox.get('op').status).toBe('PENDING');
   });
+  it('prunes only old synchronized operations', () => {
+    const outbox = fixture();
+    outbox.enqueue('synced', 'OUT', {});
+    outbox.claim('synced');
+    outbox.transition('synced', 'SYNCED');
+    outbox.enqueue('pending', 'OUT', {});
+    expect(outbox.pruneSynced(new Date(Date.now() + 1000))).toBe(1);
+    expect(outbox.get('synced')).toBeNull();
+    expect(outbox.get('pending').status).toBe('PENDING');
+  });
+  it('drains a bounded batch instead of waiting between every operation', async () => {
+    const outbox = fixture();
+    for (let index = 0; index < 4; index += 1) outbox.enqueue(`op-${index}`, 'OUT', {});
+    const processed = [];
+    const manager = new SyncManager({
+      outbox,
+      mongo: { available: true },
+      coordinator: {
+        process(operation) {
+          processed.push(operation.operationId);
+        },
+      },
+      logger: { info() {} },
+      batchSize: 3,
+      intervalMs: 60_000,
+    });
+    manager.stopped = false;
+    await manager.tick();
+    await manager.stop();
+    expect(processed).toEqual(['op-0', 'op-1', 'op-2']);
+    expect(outbox.get('op-3').status).toBe('PENDING');
+  });
   it('accepts offline operations as PENDING without calling Mongo inventory', async () => {
     const outbox = fixture();
     let calls = 0;

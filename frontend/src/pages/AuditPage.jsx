@@ -1,5 +1,5 @@
 import { memo, useEffect, useState } from 'react';
-import { api } from '../services/api.js';
+import { apiLatest, invalidateApi } from '../services/api.js';
 import { PageHeader } from '../components/ui/PageHeader.jsx';
 import { Table } from '../components/ui/Table.jsx';
 import { Pagination } from '../components/ui/Pagination.jsx';
@@ -27,13 +27,15 @@ export function AuditPage({ embedded = false }) {
   const load = (targetPage = page, values = filters) => {
     const query = new URLSearchParams({ page: String(targetPage), limit: String(PAGE_SIZE) });
     Object.entries(values).forEach(([key, value]) => value.trim() && query.set(key, value.trim()));
-    return api(`/audit?${query}`).then((data) => {
+    return apiLatest('audit-list', `/audit?${query}`).then((data) => {
+      if (!data) return;
       setItems(data.items);
       setTotal(data.pagination.total);
     });
   };
   useEffect(() => {
     load(1, { action: '', userId: '' });
+    return () => invalidateApi('audit-list');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (

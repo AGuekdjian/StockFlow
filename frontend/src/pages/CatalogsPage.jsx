@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, json } from '../services/api.js';
+import { api, apiLatest, invalidateApi, json } from '../services/api.js';
 import { PageHeader } from '../components/ui/PageHeader.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import { Input } from '../components/ui/Input.jsx';
@@ -13,10 +13,13 @@ function EntityPanel({ title, endpoint, codeLabel = 'Código' }) {
   const [form, setForm] = useState({ name: '', code: '' });
   const [error, setError] = useState();
   const [pending, setPending] = useState();
-  const load = () => api(endpoint).then((data) => setItems(data.items));
+  const requestKey = `catalog-${endpoint}`;
+  const load = () => apiLatest(requestKey, endpoint).then((data) => data && setItems(data.items));
   useEffect(() => {
-    api(endpoint).then((data) => setItems(data.items));
-  }, [endpoint]);
+    load();
+    return () => invalidateApi(requestKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [endpoint, requestKey]);
   async function create(event) {
     event.preventDefault();
     setError();
