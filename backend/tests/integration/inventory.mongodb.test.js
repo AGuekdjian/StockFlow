@@ -331,6 +331,10 @@ describe('InventoryRepository transactions', () => {
         locationId,
       }),
     ).rejects.toMatchObject({ code: 11000 });
+    const repository = new ProductRepository();
+    await expect(repository.findByCode('SN>UNIQUE-BARCODE')).resolves.toMatchObject({
+      internalCode: 'ACC-000008',
+    });
     await expect(
       Product.create({
         internalCode: 'ACC-000008',

@@ -13,7 +13,7 @@ test('admin registers an entry and sees the append-only movement', async ({ page
   await expect(page.getByText('Salidas del mes')).toBeVisible();
   await expect(page.getByText('Entradas del mes')).toBeVisible();
   await page.getByLabel('Principal').getByRole('link', { name: 'Registrar entrada' }).click();
-  await page.getByLabel('Escanear código').fill('779000000001');
+  await page.getByLabel('Escanear código').fill('SN>779000000001');
   await page.getByLabel('Escanear código').press('Enter');
   await expect(page.getByText('Cámara IP de prueba')).toBeVisible();
   await page.getByLabel('Cantidad').fill('2');

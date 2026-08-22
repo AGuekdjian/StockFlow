@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "exports": "./schemas/index.js",
+  "exports": {
+    ".": "./schemas/index.js",
+    "./code-normalization": "./schemas/code-normalization.js"
+  },
   "dependencies": {
     "zod": "^4.1.5"
   }

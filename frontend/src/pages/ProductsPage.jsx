@@ -13,6 +13,7 @@ import { cacheProducts } from '../services/products.js';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog.jsx';
 import { Pagination } from '../components/ui/Pagination.jsx';
 import { submitMovement } from '../services/inventory.js';
+import { normalizeScannedCode } from '@stock-control/shared/code-normalization';
 const PAGE_SIZE = 20;
 const emptyForm = {
   internalCode: '',
@@ -62,10 +63,7 @@ export function ProductsPage() {
     try {
       const { physicalStock, ...payload } = {
         ...form,
-        barcodes: form.barcodes
-          .split(',')
-          .map((value) => value.trim())
-          .filter(Boolean),
+        barcodes: form.barcodes.split(',').map(normalizeScannedCode).filter(Boolean),
         minimumStock: Number(form.minimumStock),
       };
       delete payload.internalCode;

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Input } from '../ui/Input.jsx';
+import { normalizeScannedCode } from '@stock-control/shared/code-normalization';
 
 export function BarcodeScanner({ onScan, disabled }) {
   const [value, setValue] = useState('');
@@ -10,7 +11,7 @@ export function BarcodeScanner({ onScan, disabled }) {
   }, [disabled]);
   function submit(event) {
     event.preventDefault();
-    const code = value.trim();
+    const code = normalizeScannedCode(value);
     const now = Date.now();
     if (!code || (last.current.code === code && now - last.current.at < 1000)) return;
     last.current = { code, at: now };

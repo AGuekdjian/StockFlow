@@ -2,6 +2,7 @@ import { Product } from './product.model.js';
 import { Category } from '../categories/category.model.js';
 import { Location } from '../locations/location.model.js';
 import { ProductCodeCounter } from './product-code-counter.model.js';
+import { normalizeScannedCode } from '@stock-control/shared/code-normalization';
 
 function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -50,8 +51,12 @@ export class ProductRepository {
     return Product.findById(id).lean();
   }
   findByCode(code) {
+    const normalizedCode = normalizeScannedCode(code);
     return Product.findOne({
-      $or: [{ internalCode: code.toUpperCase() }, { barcodes: code }],
+      $or: [
+        { internalCode: normalizedCode.toUpperCase() },
+        { barcodes: { $in: [normalizedCode, `SN>${normalizedCode}`, `SN:${normalizedCode}`] } },
+      ],
     }).lean();
   }
   async list({ page, limit, active, search }) {
