@@ -58,11 +58,13 @@ esa misma pantalla por un administrador y el cambio cierra las sesiones activas 
 
 ### Flujo de operación
 
-- `Registrar stock` reúne la entrada normal y el conteo físico. Un conteo nunca modifica el stock
-  directamente: genera un movimiento de ajuste trazable.
-- Al crear un producto se puede escribir el código completo o sólo un prefijo terminado en guion,
-  por ejemplo `CAM-`. En este último caso el backend asigna de forma atómica el siguiente correlativo
-  de seis dígitos para esa categoría (`CAM-000002`, etc.), incluso ante altas simultáneas.
+- `Registrar entrada` conserva el flujo independiente de ingreso de mercadería existente.
+- Al crear una categoría, el administrador define manualmente su prefijo en el campo `Código`, por
+  ejemplo `CAM` o `DVR`. Al crear un producto, la categoría seleccionada determina el prefijo y el
+  backend asigna automáticamente el siguiente correlativo de seis dígitos (`CAM-000002`, etc.),
+  incluso ante altas simultáneas; el usuario nunca escribe el código interno.
+- El formulario de producto incluye el conteo físico inicial. Si es mayor que cero, se registra como
+  un movimiento de ajuste trazable; no se modifica stock directamente.
 - `Auditoría y sincronización` reúne en una pantalla la outbox, los conflictos y el registro
   inmutable de acciones.
 - El resumen operacional muestra entradas y salidas de hoy y del mes actual, además de alertas de

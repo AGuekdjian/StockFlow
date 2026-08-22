@@ -8,7 +8,6 @@ import { ProductsPage } from './pages/ProductsPage.jsx';
 import { MovementsPage } from './pages/MovementsPage.jsx';
 import { UsersPage } from './pages/UsersPage.jsx';
 import { CatalogsPage } from './pages/CatalogsPage.jsx';
-import { StockRegistrationPage } from './pages/StockRegistrationPage.jsx';
 import { SystemOperationsPage } from './pages/SystemOperationsPage.jsx';
 
 function Protected() {
@@ -33,15 +32,15 @@ export function App() {
           <Route path="salida" element={<MovementPage type="OUT" />} />
           <Route path="devolucion" element={<MovementPage type="RETURN" />} />
           <Route
-            path="registro-stock"
+            path="entrada"
             element={
               <Admin>
-                <StockRegistrationPage />
+                <MovementPage type="IN" />
               </Admin>
             }
           />
-          <Route path="entrada" element={<Navigate to="/registro-stock" replace />} />
-          <Route path="conteo" element={<Navigate to="/registro-stock" replace />} />
+          <Route path="registro-stock" element={<Navigate to="/entrada" replace />} />
+          <Route path="conteo" element={<Navigate to="/productos" replace />} />
           <Route path="productos" element={<ProductsPage />} />
           <Route
             path="catalogos"

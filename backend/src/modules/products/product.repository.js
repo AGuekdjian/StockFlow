@@ -10,10 +10,10 @@ function escapeRegex(value) {
 export class ProductRepository {
   async referencesAreActive(categoryId, locationId) {
     const [category, location] = await Promise.all([
-      Category.exists({ _id: categoryId, active: true }),
+      Category.findOne({ _id: categoryId, active: true }).select('code').lean(),
       Location.exists({ _id: locationId, active: true }),
     ]);
-    return { category: Boolean(category), location: Boolean(location) };
+    return { category, location: Boolean(location) };
   }
   create(input) {
     return Product.create({ ...input, stock: 0 }).then((value) => value.toJSON());

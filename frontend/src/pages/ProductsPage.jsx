@@ -12,9 +12,11 @@ import { Alert } from '../components/ui/Alert.jsx';
 import { cacheProducts } from '../services/products.js';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog.jsx';
 import { Pagination } from '../components/ui/Pagination.jsx';
+import { submitMovement } from '../services/inventory.js';
 const PAGE_SIZE = 20;
 const emptyForm = {
   internalCode: '',
+  physicalStock: 0,
   barcodes: '',
   name: '',
   brand: '',
@@ -58,7 +60,7 @@ export function ProductsPage() {
     event.preventDefault();
     setError();
     try {
-      const payload = {
+      const { physicalStock, ...payload } = {
         ...form,
         barcodes: form.barcodes
           .split(',')
@@ -66,11 +68,21 @@ export function ProductsPage() {
           .filter(Boolean),
         minimumStock: Number(form.minimumStock),
       };
-      if (editingId) delete payload.internalCode;
-      await api(editingId ? `/products/${editingId}` : '/products', {
+      delete payload.internalCode;
+      const result = await api(editingId ? `/products/${editingId}` : '/products', {
         method: editingId ? 'PATCH' : 'POST',
         body: json(payload),
       });
+      if (!editingId && Number(physicalStock) > 0) {
+        await submitMovement({
+          operationId: crypto.randomUUID(),
+          productId: result.product._id,
+          type: 'ADJUSTMENT_IN',
+          quantity: Number(physicalStock),
+          reason: 'Conteo físico inicial',
+          expectedStock: 0,
+        });
+      }
       setShowForm(false);
       setEditingId(null);
       setForm(emptyForm);
@@ -83,6 +95,7 @@ export function ProductsPage() {
     setEditingId(item._id);
     setForm({
       internalCode: item.internalCode,
+      physicalStock: 0,
       barcodes: item.barcodes.join(', '),
       name: item.name,
       brand: item.brand ?? '',
@@ -162,12 +175,15 @@ export function ProductsPage() {
               </div>
             )}
             <Input
-              label="Código interno o prefijo correlativo"
-              required
-              disabled={Boolean(editingId)}
-              placeholder="Ej.: CAM-"
-              value={form.internalCode}
-              onChange={(e) => setForm({ ...form, internalCode: e.target.value })}
+              label="Código interno"
+              disabled
+              value={
+                editingId
+                  ? form.internalCode
+                  : form.categoryId
+                    ? `${(refs.categories.find((item) => item._id === form.categoryId)?.code ?? '').replace(/-+$/, '')}-######`
+                    : 'Se asigna al elegir una categoría'
+              }
             />
             <Input
               label="Nombre"
@@ -197,6 +213,16 @@ export function ProductsPage() {
               value={form.minimumStock}
               onChange={(e) => setForm({ ...form, minimumStock: e.target.value })}
             />
+            {!editingId && (
+              <Input
+                label="Conteo físico inicial"
+                type="number"
+                min="0"
+                required
+                value={form.physicalStock}
+                onChange={(e) => setForm({ ...form, physicalStock: e.target.value })}
+              />
+            )}
             <Select
               label="Categoría"
               required

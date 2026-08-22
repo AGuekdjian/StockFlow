@@ -36,7 +36,7 @@ export function DashboardPage() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
           ['Nueva salida rápida', '/salida'],
-          ...(user.role === 'ADMIN' ? [['Registrar stock', '/registro-stock']] : []),
+          ...(user.role === 'ADMIN' ? [['Registrar entrada', '/entrada']] : []),
           ['Escanear producto', '/scanner'],
           ['Ver movimientos', '/movimientos'],
           ...(user.role === 'ADMIN' ? [['Auditoría y sincronización', '/sistema']] : []),

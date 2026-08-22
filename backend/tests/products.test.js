@@ -12,7 +12,7 @@ const logger = { info() {} };
 function fixture(overrides = {}) {
   const products = {
     async referencesAreActive() {
-      return { category: true, location: true };
+      return { category: { code: 'CAM' }, location: true };
     },
     async create(input) {
       return { _id: 'product-id', stock: 0, active: true, ...input };
@@ -38,8 +38,8 @@ describe('ProductService', () => {
     const product = await fixture().create(valid, {});
     expect(product.stock).toBe(0);
   });
-  it('assigns the next atomic sequence when only a prefix is entered', async () => {
-    const product = await fixture().create({ ...valid, internalCode: 'CAM-' }, {});
+  it('assigns the next atomic sequence from the selected category', async () => {
+    const product = await fixture().create({ ...valid, internalCode: undefined }, {});
     expect(product.internalCode).toBe('CAM-000002');
   });
   it.each([

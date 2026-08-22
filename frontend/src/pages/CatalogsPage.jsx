@@ -8,7 +8,7 @@ import { Badge } from '../components/ui/Badge.jsx';
 import { Alert } from '../components/ui/Alert.jsx';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog.jsx';
 
-function EntityPanel({ title, endpoint }) {
+function EntityPanel({ title, endpoint, codeLabel = 'Código' }) {
   const [items, setItems] = useState([]);
   const [form, setForm] = useState({ name: '', code: '' });
   const [error, setError] = useState();
@@ -52,7 +52,7 @@ function EntityPanel({ title, endpoint }) {
           onChange={(event) => setForm({ ...form, name: event.target.value })}
         />
         <Input
-          label="Código"
+          label={codeLabel}
           required
           value={form.code}
           onChange={(event) => setForm({ ...form, code: event.target.value })}
@@ -102,7 +102,7 @@ export function CatalogsPage() {
         description="Maestros archivables utilizados por el catálogo de productos."
       />
       <div className="grid gap-5 xl:grid-cols-2">
-        <EntityPanel title="Categorías" endpoint="/categories" />
+        <EntityPanel title="Categorías" endpoint="/categories" codeLabel="Prefijo" />
         <EntityPanel title="Ubicaciones" endpoint="/locations" />
       </div>
     </>
