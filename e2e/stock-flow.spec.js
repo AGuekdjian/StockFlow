@@ -12,7 +12,7 @@ test('admin registers an entry and sees the append-only movement', async ({ page
   await expect(page.getByRole('heading', { name: 'Resumen operacional' })).toBeVisible();
   await expect(page.getByText('Salidas del mes')).toBeVisible();
   await expect(page.getByText('Entradas del mes')).toBeVisible();
-  await page.getByRole('link', { name: 'Registrar stock' }).click();
+  await page.getByLabel('Principal').getByRole('link', { name: 'Registrar stock' }).click();
   await expect(page.getByRole('tab', { name: 'Conteo y ajuste' })).toBeVisible();
   await page.getByLabel('Escanear código').fill('779000000001');
   await page.getByLabel('Escanear código').press('Enter');
