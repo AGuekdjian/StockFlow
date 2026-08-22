@@ -27,6 +27,7 @@ const schema = new mongoose.Schema(
 schema.index({ createdAt: -1, _id: -1 });
 schema.index({ productId: 1, createdAt: -1 });
 schema.index({ userId: 1, createdAt: -1 });
+schema.index({ type: 1, createdAt: -1, _id: -1 });
 for (const operation of [
   'updateOne',
   'updateMany',

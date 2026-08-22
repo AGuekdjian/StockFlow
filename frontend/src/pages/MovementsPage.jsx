@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { api } from '../services/api.js';
 import { PageHeader } from '../components/ui/PageHeader.jsx';
 import { Table } from '../components/ui/Table.jsx';
@@ -9,6 +9,38 @@ import { Button } from '../components/ui/Button.jsx';
 import { Card } from '../components/ui/Card.jsx';
 import { Pagination } from '../components/ui/Pagination.jsx';
 const PAGE_SIZE = 20;
+const MovementRow = memo(function MovementRow({ item }) {
+  return (
+    <tr>
+      <td className="whitespace-nowrap px-4 py-3">{new Date(item.createdAt).toLocaleString()}</td>
+      <td className="px-4 py-3">
+        <Badge tone={item.type.includes('OUT') ? 'warning' : 'info'}>{item.type}</Badge>
+      </td>
+      <td className="px-4 py-3">
+        <span className="font-medium">{item.productId?.name ?? 'Producto'}</span>
+        <span className="block font-mono text-xs text-slate-500">
+          {item.productId?.internalCode ?? String(item.productId)}
+        </span>
+      </td>
+      <td className="px-4 py-3 font-bold">{item.quantity}</td>
+      <td className="px-4 py-3">{item.stockBefore}</td>
+      <td className="px-4 py-3">{item.stockAfter}</td>
+      <td className="px-4 py-3">{item.reason}</td>
+      <td className="px-4 py-3 text-sm">
+        <span className="font-medium">{item.userId?.name ?? String(item.userId)}</span>
+        {(item.client || item.job) && (
+          <span className="block text-xs text-slate-500">
+            {[item.client, item.job].filter(Boolean).join(' · ')}
+          </span>
+        )}
+      </td>
+      <td className="px-4 py-3">
+        <Badge tone="success">{item.syncStatus}</Badge>
+      </td>
+      <td className="px-4 py-3 font-mono text-xs">{item.operationId}</td>
+    </tr>
+  );
+});
 export function MovementsPage() {
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
@@ -143,36 +175,7 @@ export function MovementsPage() {
         empty={!items.length}
       >
         {items.map((item) => (
-          <tr key={item._id}>
-            <td className="whitespace-nowrap px-4 py-3">
-              {new Date(item.createdAt).toLocaleString()}
-            </td>
-            <td className="px-4 py-3">
-              <Badge tone={item.type.includes('OUT') ? 'warning' : 'info'}>{item.type}</Badge>
-            </td>
-            <td className="px-4 py-3">
-              <span className="font-medium">{item.productId?.name ?? 'Producto'}</span>
-              <span className="block font-mono text-xs text-slate-500">
-                {item.productId?.internalCode ?? String(item.productId)}
-              </span>
-            </td>
-            <td className="px-4 py-3 font-bold">{item.quantity}</td>
-            <td className="px-4 py-3">{item.stockBefore}</td>
-            <td className="px-4 py-3">{item.stockAfter}</td>
-            <td className="px-4 py-3">{item.reason}</td>
-            <td className="px-4 py-3 text-sm">
-              <span className="font-medium">{item.userId?.name ?? String(item.userId)}</span>
-              {(item.client || item.job) && (
-                <span className="block text-xs text-slate-500">
-                  {[item.client, item.job].filter(Boolean).join(' · ')}
-                </span>
-              )}
-            </td>
-            <td className="px-4 py-3">
-              <Badge tone="success">{item.syncStatus}</Badge>
-            </td>
-            <td className="px-4 py-3 font-mono text-xs">{item.operationId}</td>
-          </tr>
+          <MovementRow key={item._id} item={item} />
         ))}
       </Table>
       <Pagination

@@ -18,4 +18,5 @@ userSchema.set('toJSON', {
     return value;
   },
 });
+userSchema.index({ createdAt: -1, _id: -1 });
 export const User = mongoose.models.User ?? mongoose.model('User', userSchema);

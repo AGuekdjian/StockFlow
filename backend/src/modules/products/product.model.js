@@ -31,4 +31,6 @@ schema.index(
   { unique: true, partialFilterExpression: { barcodes: { $type: 'string' } } },
 );
 schema.index({ name: 'text', brand: 'text', model: 'text', internalCode: 'text' });
+schema.index({ name: 1, _id: 1 });
+schema.index({ active: 1, stock: 1 });
 export const Product = mongoose.models.Product ?? mongoose.model('Product', schema);

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { api, json } from '../services/api.js';
 import { PageHeader } from '../components/ui/PageHeader.jsx';
 import { Table } from '../components/ui/Table.jsx';
@@ -13,6 +13,32 @@ import { ConfirmDialog } from '../components/ui/ConfirmDialog.jsx';
 import { Pagination } from '../components/ui/Pagination.jsx';
 import { Modal } from '../components/ui/Modal.jsx';
 const PAGE_SIZE = 20;
+const UserRow = memo(function UserRow({ item, currentUserId, onPassword, onStatus }) {
+  return (
+    <tr>
+      <td className="px-4 py-3 font-medium">{item.name}</td>
+      <td className="px-4 py-3">{item.email}</td>
+      <td className="px-4 py-3">{item.role}</td>
+      <td className="px-4 py-3">
+        <Badge tone={item.active ? 'success' : 'neutral'}>
+          {item.active ? 'Activo' : 'Inactivo'}
+        </Badge>
+      </td>
+      <td className="px-4 py-3">
+        <div className="flex flex-wrap gap-1">
+          <Button variant="quiet" onClick={() => onPassword(item)}>
+            Cambiar contraseña
+          </Button>
+          {currentUserId !== String(item._id) && (
+            <Button variant="quiet" onClick={() => onStatus(item)}>
+              {item.active ? 'Desactivar' : 'Reactivar'}
+            </Button>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+});
 export function UsersPage() {
   const { user: current } = useAuth();
   const [items, setItems] = useState([]);
@@ -130,28 +156,13 @@ export function UsersPage() {
       )}
       <Table headers={['Nombre', 'Email', 'Rol', 'Estado', 'Acción']} empty={!items.length}>
         {items.map((item) => (
-          <tr key={item._id}>
-            <td className="px-4 py-3 font-medium">{item.name}</td>
-            <td className="px-4 py-3">{item.email}</td>
-            <td className="px-4 py-3">{item.role}</td>
-            <td className="px-4 py-3">
-              <Badge tone={item.active ? 'success' : 'neutral'}>
-                {item.active ? 'Activo' : 'Inactivo'}
-              </Badge>
-            </td>
-            <td className="px-4 py-3">
-              <div className="flex flex-wrap gap-1">
-                <Button variant="quiet" onClick={() => setPendingPassword(item)}>
-                  Cambiar contraseña
-                </Button>
-                {current.id !== String(item._id) && (
-                  <Button variant="quiet" onClick={() => setPendingStatus(item)}>
-                    {item.active ? 'Desactivar' : 'Reactivar'}
-                  </Button>
-                )}
-              </div>
-            </td>
-          </tr>
+          <UserRow
+            key={item._id}
+            item={item}
+            currentUserId={current.id}
+            onPassword={setPendingPassword}
+            onStatus={setPendingStatus}
+          />
         ))}
       </Table>
       <Pagination
