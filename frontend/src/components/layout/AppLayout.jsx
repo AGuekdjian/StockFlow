@@ -5,7 +5,7 @@ const allLinks = [
   { to: '/', label: 'Resumen' },
   { to: '/salida', label: 'Registrar salida' },
   { to: '/devolucion', label: 'Registrar devolución' },
-  { to: '/registro-stock', label: 'Registrar stock', admin: true },
+  { to: '/entrada', label: 'Registrar entrada', admin: true },
   { to: '/productos', label: 'Productos' },
   { to: '/catalogos', label: 'Categorías y ubicaciones', admin: true },
   { to: '/movimientos', label: 'Movimientos' },

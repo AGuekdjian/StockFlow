@@ -36,17 +36,17 @@ export class ProductService {
         message: 'La ubicación no existe o está inactiva.',
         status: 422,
       });
+    return state;
   }
   async create(input, context) {
-    await this.ensureReferences(input.categoryId, input.locationId);
+    const references = await this.ensureReferences(input.categoryId, input.locationId);
     try {
       const productInput = { ...input };
-      if (productInput.internalCode.endsWith('-')) {
-        productInput.internalCode = await this.products.nextInternalCode(
-          productInput.internalCode,
-          productInput.categoryId,
-        );
-      }
+      const categoryPrefix = references.category.code.replace(/-+$/, '');
+      productInput.internalCode = await this.products.nextInternalCode(
+        `${categoryPrefix}-`,
+        productInput.categoryId,
+      );
       const product = await this.products.create(productInput);
       this.logger.info({ event: 'product.created', productId: String(product._id), ...context });
       await this.audit?.record({

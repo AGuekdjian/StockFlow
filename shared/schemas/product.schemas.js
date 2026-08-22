@@ -16,7 +16,8 @@ export const createProductSchema = z
       .toUpperCase()
       .min(3)
       .max(40)
-      .regex(/^[A-Z0-9_-]+$/),
+      .regex(/^[A-Z0-9_-]+$/)
+      .optional(),
     barcodes: z
       .array(barcode)
       .max(20)
