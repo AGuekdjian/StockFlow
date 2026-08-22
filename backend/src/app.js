@@ -18,6 +18,7 @@ import { auditRouter } from './modules/audit/audit.routes.js';
 import { dashboardRouter } from './modules/inventory/dashboard.routes.js';
 import { originMiddleware } from './middlewares/origin.middleware.js';
 import { requestLoggingMiddleware } from './middlewares/request-logging.middleware.js';
+import { swaggerRouter } from './docs/swagger.routes.js';
 
 export function createApp({
   env,
@@ -60,6 +61,7 @@ export function createApp({
   );
   app.use(express.json({ limit: '100kb' }));
   app.use(noSqlSanitizeMiddleware);
+  app.use('/api', swaggerRouter());
   if (authService && users) {
     app.use(
       session({

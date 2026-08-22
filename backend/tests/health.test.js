@@ -22,6 +22,15 @@ afterEach(() => {
   while (databases.length) databases.pop().close();
 });
 describe('GET /api/health', () => {
+  it('serves interactive API documentation and its OpenAPI document', async () => {
+    const app = fixture();
+    const docs = await request(app).get('/api/docs').expect(200);
+    expect(docs.text).toContain('StockFlow API');
+    const specification = await request(app).get('/api/openapi.json').expect(200);
+    expect(specification.body.openapi).toBe('3.1.0');
+    expect(specification.body.paths['/inventory/movements'].post).toBeDefined();
+  });
+
   it('reports degraded status and outbox counts when MongoDB is offline', async () => {
     const response = await request(fixture()).get('/api/health').expect(200);
     expect(response.body.data).toEqual({
